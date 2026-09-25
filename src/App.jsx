@@ -1,155 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { Sun, Settings as SettingsIcon } from 'lucide-react';
-import { DEFAULT_SETTINGS, COMMON_APPLIANCES, PROFILE_PRESETS, NIGERIAN_CITIES } from './data/pricingDefaults';
-import { calculateSolarSystem, normalizeSettings } from './utils/calculations';
-import { ScreenInput } from './components/ScreenInput';
-import { ScreenBOQ } from './components/ScreenBOQ';
-import { ScreenPDF } from './components/ScreenPDF';
-import { ScreenAdmin } from './components/ScreenAdmin';
+﻿import React, { useState, useMemo, useCallback } from 'react';
+import { Sun, Moon, ArrowLeft, User, Wrench } from 'lucide-react';
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState('input');
+import { AppProvider, useApp } from './context/AppContext.jsx';
+import { calculateSolarSystem } from './utils/calculations.js';
+import { calculateRunningCosts } from './utils/energyCosts.js';
+import { PROFILE_PRESETS, NIGERIAN_CITIES } from './data/pricingDefaults.js';
+
+import { WelcomeScreen } from './components/WelcomeScreen.jsx';
+import { BottomTabs } from './components/BottomTabs.jsx';
+import { HomeScreen } from './components/HomeScreen.jsx';
+import { CatalogScreen } from './components/CatalogScreen.jsx';
+import { SettingsScreen } from './components/SettingsScreen.jsx';
+import { LoadsScreen } from './components/LoadsScreen.jsx';
+import { BOQScreen } from './components/BOQScreen.jsx';
+import { WalletScreen } from './components/WalletScreen.jsx';
+
+const TITLES = {
+  home: 'Dashboard',
+  catalog: 'Product catalog',
+  quote: 'Your loads',
+  boq: 'Bill of quantities',
+  wallet: 'Wallet & plan',
+  settings: 'Settings',
+};
+
+function Shell() {
+  const {
+    settings, isDark, isSimple, themeMode, canUse,
+    completeOnboarding, toggleTheme, setExperienceMode, quoteCounter,
+  } = useApp();
+
+  const [tab, setTab] = useState('home');
+  const [catalogSection, setCatalogSection] = useState(null);
   const [selectedPreset, setSelectedPreset] = useState('school');
   const [selectedCity, setSelectedCity] = useState(NIGERIAN_CITIES[0]);
   const [selectedTierIndex, setSelectedTierIndex] = useState(1);
   const [installerMarkup, setInstallerMarkup] = useState(15);
-  
-  const [settings, setSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('solarquote_settings');
-      // Old app versions / partial writes must never break the engine.
-      return normalizeSettings(saved ? JSON.parse(saved) : DEFAULT_SETTINGS);
-    } catch {
-      return normalizeSettings(DEFAULT_SETTINGS);
-    }
-  });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('solarquote_settings', JSON.stringify(settings));
-    } catch (e) {
-      console.warn("Storage error", e);
-    }
-  }, [settings]);
+  const [appliances, setAppliances] = useState(() =>
+    // suggestedAppliances is a { id: qty } map, not an array.
+    Object.entries(PROFILE_PRESETS[0].suggestedAppliances).map(([id, qty]) => ({ id, qty }))
+  );
 
-  const [appliances, setAppliances] = useState(() => {
-    const schoolPreset = PROFILE_PRESETS[0];
-    return COMMON_APPLIANCES.map(app => ({
-      ...app,
-      qty: schoolPreset.suggestedAppliances[app.id] || 0,
-      watts: app.defaultWatts,
-      hoursDay: schoolPreset.operatingHoursDay,
-      hoursNight: schoolPreset.operatingHoursNight
-    }));
-  });
+  const calcResult = useMemo(
+    () =>
+      calculateSolarSystem({
+        appliances,
+        sunHours: selectedCity.sunHours,
+        settings,
+        installerMarkupPercent: installerMarkup,
+      }),
+    [appliances, selectedCity.sunHours, settings, installerMarkup]
+  );
 
-  const calcResult = calculateSolarSystem({
-    appliances,
-    sunHours: selectedCity.sunHours,
-    backupHoursNight: 8,
-    settings,
-    installerMarkupPercent: installerMarkup
-  });
+  const costs = useMemo(
+    () =>
+      calculateRunningCosts({
+        dailyKWh: calcResult.totalDailyKWh,
+        genKVA: Math.max(3.5, calcResult.recommendedInverterKVA),
+        settings,
+        supplyMode: settings.gridHoursPerDay >= 18 ? 'grid' : 'hybrid',
+      }),
+    [calcResult.totalDailyKWh, calcResult.recommendedInverterKVA, settings]
+  );
+
+  const navigate = useCallback((next, section) => {
+    setTab(next);
+    if (section) setCatalogSection(section);
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  /** Adds a catalog product to the quote as a load line, or bumps its count. */
+  const addLoad = useCallback((product) => {
+    setAppliances((prev) => {
+      if (prev.some((a) => a.id === product.id)) {
+        return prev.map((a) =>
+          a.id === product.id ? { ...a, qty: (a.qty || 0) + 1 } : a
+        );
+      }
+      return [
+        ...prev,
+        {
+          id: product.id,
+          name: product.name,
+          watts: product.watts,
+          surgeWatts: product.surgeWatts || 0,
+          qty: 1,
+          hoursDay: product.specs?.hoursDay ?? 8,
+          hoursNight: product.specs?.hoursNight ?? 0,
+          brand: product.brand,
+        },
+      ];
+    });
+  }, []);
+
+  const applyPreset = useCallback((presetId) => {
+    const preset = PROFILE_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    setSelectedPreset(presetId);
+    // suggestedAppliances is a { id: qty } map, not an array.
+    setAppliances(
+      Object.entries(preset.suggestedAppliances).map(([id, qty]) => ({ id, qty }))
+    );
+  }, []);
+
+  // Adding catalog hardware to a quote is a paid capability.
+  const canUseCatalogAdd = canUse('catalog_add');
+  const onLockedAdd = useCallback(() => navigate('wallet'), [navigate]);
+
+  if (!settings.onboarded) {
+    return <WelcomeScreen onComplete={completeOnboarding} />;
+  }
+
+  const themeLabel = themeMode === 'system' ? 'Auto' : isDark ? 'Dark' : 'Light';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col max-w-xl mx-auto shadow-2xl border-x border-slate-900/60">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md shadow-amber-500/20">
-            <Sun className="w-5 h-5 fill-slate-950" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-base font-extrabold tracking-tight text-white leading-none">
-                SolarQuote <span className="text-amber-400">NG</span>
-              </h1>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded font-mono font-bold">
-                PRO
-              </span>
+    <div className="min-h-screen bg-canvas text-ink">
+      <header className="sticky top-0 z-40 bg-canvas/90 backdrop-blur-md border-b border-line sq-safe-t">
+        <div className="mx-auto max-w-2xl px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {tab !== 'home' && (
+              <button
+                type="button"
+                onClick={() => navigate('home')}
+                aria-label="Back to dashboard"
+                className="w-9 h-9 rounded-xl border border-line bg-surface text-ink-2 flex items-center justify-center shrink-0"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
+            <div className="w-9 h-9 rounded-xl bg-accent text-accent-fg flex items-center justify-center shrink-0">
+              <Sun className="w-5 h-5" strokeWidth={2.2} />
             </div>
-            <p className="text-[11px] text-slate-400 font-medium mt-0.5">Electrician BOQ Engine</p>
+            <div className="min-w-0">
+              <h1 className="text-sm font-extrabold tracking-tight leading-none truncate">
+                SolarQuote <span className="text-accent">NG</span>
+              </h1>
+              <p className="text-[11px] text-ink-3 font-semibold mt-0.5 truncate">
+                {TITLES[tab]}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setExperienceMode(isSimple ? 'pro' : 'simple')}
+              aria-label={isSimple ? 'Switch to professional mode' : 'Switch to simple mode'}
+              title={isSimple ? 'Professional mode' : 'Simple mode'}
+              className="w-9 h-9 rounded-xl border border-line bg-surface text-ink-2 flex items-center justify-center"
+            >
+              {isSimple ? <User className="w-4 h-4" /> : <Wrench className="w-4 h-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={`Theme: ${themeLabel}. Tap to change.`}
+              title={`Theme: ${themeLabel}`}
+              className="w-9 h-9 rounded-xl border border-line bg-surface text-ink-2 flex items-center justify-center"
+            >
+              {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </button>
           </div>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab(activeTab === 'admin' ? 'input' : 'admin')}
-          className={`p-2 rounded-xl border transition ${
-            activeTab === 'admin'
-              ? 'bg-amber-500 text-slate-950 border-amber-400'
-              : 'bg-slate-900 text-slate-300 border-slate-800 hover:text-white'
-          }`}
-          title="Installer Settings & Price Database"
-        >
-          <SettingsIcon className="w-4 h-4" />
-        </button>
       </header>
 
-      {/* Tabs */}
-      <nav className="px-4 py-2 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between text-xs font-semibold">
-        {['input', 'boq', 'pdf'].map((tab, idx) => {
-          const names = ['1. Appliances', '2. Sizing & BOQ', '3. Branded PDF'];
-          return (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-1.5 text-center rounded-lg transition ${
-                activeTab === tab ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {names[idx]}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Content */}
-      <main className="flex-1 p-4">
-        {activeTab === 'input' && (
-          <ScreenInput
-            selectedPreset={selectedPreset}
-            setSelectedPreset={setSelectedPreset}
-            appliances={appliances}
-            setAppliances={setAppliances}
-            selectedCity={selectedCity}
-            setSelectedCity={setSelectedCity}
-            onProceed={() => setActiveTab('boq')}
+      <main className="mx-auto max-w-2xl px-4 py-4">
+        {tab === 'home' && (
+          <HomeScreen
+            costs={costs}
+            calcResult={calcResult}
+            isSimple={isSimple}
+            quoteNumber={quoteCounter}
+            onNavigate={navigate}
           />
         )}
 
-        {activeTab === 'boq' && (
-          <ScreenBOQ
+        {tab === 'catalog' && (
+          <CatalogScreen
+            isSimple={isSimple}
+            onAddLoad={canUseCatalogAdd ? addLoad : null}
+            onLockedAdd={onLockedAdd}
+            currentLoads={appliances}
+            initialSection={catalogSection}
+          />
+        )}
+
+        {tab === 'quote' && (
+          <LoadsScreen
+            appliances={appliances}
+            setAppliances={setAppliances}
+            selectedPreset={selectedPreset}
+            applyPreset={applyPreset}
+            selectedCity={selectedCity}
+            setSelectedCity={setSelectedCity}
+            isSimple={isSimple}
             calcResult={calcResult}
+            onBrowse={() => navigate('catalog')}
+            onContinue={() => navigate('boq')}
+          />
+        )}
+
+        {tab === 'boq' && (
+          <BOQScreen
+            calcResult={calcResult}
+            costs={costs}
+            isSimple={isSimple}
             selectedTierIndex={selectedTierIndex}
             setSelectedTierIndex={setSelectedTierIndex}
             installerMarkup={installerMarkup}
             setInstallerMarkup={setInstallerMarkup}
-            onBack={() => setActiveTab('input')}
-            onProceedToPDF={() => setActiveTab('pdf')}
+            settings={settings}
+            quoteNumber={quoteCounter}
+            onBack={() => navigate('quote')}
+            onOpenWallet={() => navigate('wallet')}
           />
         )}
 
-        {activeTab === 'pdf' && (
-          <ScreenPDF
-            calcResult={calcResult}
-            selectedTierIndex={selectedTierIndex}
-            settings={settings}
-            setSettings={setSettings}
-            appliances={appliances}
-            onBack={() => setActiveTab('boq')}
-          />
-        )}
+        {tab === 'wallet' && <WalletScreen />}
 
-        {activeTab === 'admin' && (
-          <ScreenAdmin
-            settings={settings}
-            setSettings={setSettings}
-            onBack={() => setActiveTab('input')}
-          />
-        )}
+        {tab === 'settings' && <SettingsScreen onOpenWallet={() => navigate('wallet')} />}
       </main>
+
+      <BottomTabs active={tab} onChange={(t) => navigate(t)} />
     </div>
   );
 }
+
+export default function App() {
+  return (
+    <AppProvider>
+      <Shell />
+    </AppProvider>
+  );
+}
+
+

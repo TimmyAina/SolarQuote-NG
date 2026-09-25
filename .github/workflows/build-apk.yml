@@ -60,25 +60,38 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.1.2
-          name: SolarQuote NG Release v0.1.2
+          tag_name: v0.2.0
+          name: SolarQuote NG Release v0.2.0
           body: |
-            ## SolarQuote NG — Production Android APK Release ⚡
-            - **App Version**: 0.1.2
-            - **Target**: Android 14+ (ARM64 & x86_64)
-            - **Status**: Systematically debugged across numerical, runtime, persistence, and edge-case boundaries.
-            - **Features Included**:
-              - Instant 30-second solar sizing (Fans, Bulbs, AC, Freezer, Pumping machine)
-              - Inductive surge detection for compressors, ACs and borehole pumps
-              - DC cable, DC breaker/isolator and roof footprint (area + dead load) engineering specs
-              - Private installer margin slider (5%–40%) that never prints on the client quote
-              - Payment milestones: 70% mobilization / 20% mounting / 10% commissioning
-              - 5-year Generator-vs-Solar lifecycle savings with payback in months
-              - 3 Equipment Quality Tiers (Economy, Standard, Premium)
-              - Branded PDF BOQ, Invoice and Receipt with company logo upload
-              - On-screen signature pad embedded above the authorized signature block
-              - Paystack paywall simulation (₦2,000 / document unlock)
-              - Admin panel for real-time equipment pricing updates
+            ## SolarQuote NG v0.2.0 — Wallet, catalog & currency fixes ⚡
+
+            ### Fixed
+            - **Naira sign (₦) now renders** in the app and in every exported PDF.
+              jsPDF's built-in fonts are WinAnsi-only and had no U+20A6 glyph, so
+              every currency figure silently lost its symbol. Noto Sans is now
+              embedded in the PDF and added to the app font stack.
+
+            ### New
+            - **Wallet & plans** — Pay-As-You-Go at ₦500 per generated quotation,
+              Limited ₦10,000/month and Unlimited ₦25,000/month. Wallet top-ups,
+              transaction history, plan expiry countdown and cancellation.
+            - **Your own products** — add your own inverters, batteries, panels,
+              laptops, desktops and appliances. They appear in the catalog,
+              search and can be quoted like any built-in product.
+            - **Per-product price overrides** — change the price of any catalog
+              product to your own supplier price. Overrides never mutate the
+              shipped dataset and apply to every quote.
+            - **Onboarding** now asks for detail level (Simple / Professional)
+              *and* a plan, in a three-step first-run flow.
+            - Light / dark / system themes, plus Simple and Professional detail
+              levels, are selectable in Settings.
+
+            ### Engineering
+            - Quote counter starts at **#0** and never uses a default offset.
+            - Feature gates by plan rank, so higher tiers inherit lower ones.
+            - Paystack-ready payment seam (wallet is live; gateway is config).
+            - ~180 automated assertions across billing, catalog, sizing,
+              persistence, PDF output and a full jsdom render of the app.
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
         env:

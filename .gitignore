@@ -1,6 +1,10 @@
 node_modules/
 dist/
 .tmp-smoke/
+.tmp-pdf/
+.tmp-render/
+*.txt
+!.gitattributes
 .env
 .env.local
 .DS_Store
@@ -11,3 +15,7 @@ android/local.properties
 android/captures/
 *.apk
 *.aab
+
+# Source TTF for the embedded PDF font. The generated src/fonts/noto-sans.js is
+# committed (it is what the app imports); the raw binary is not needed to build.
+.tmp-font.bin

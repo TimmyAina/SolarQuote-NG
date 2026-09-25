@@ -40,6 +40,53 @@ const decoded = Buffer.from(base64, 'base64');
 check('decodes to a real PDF', decoded.subarray(0, 5).toString() === '%PDF-', decoded.subarray(0, 8).toString());
 check('PDF has EOF marker', decoded.subarray(-1024).toString('latin1').includes('%%EOF'));
 
+console.log('\n[2b] Naira sign survives PDF generation (the U+20A6 bug)');
+// Regression context: jsPDF's built-in fonts are WinAnsi-only and have no
+// Naira glyph, so every currency figure silently lost its ₦. The fix embeds
+// Noto Sans. This renders a real BOQ and inspects the resulting PDF bytes.
+const { generateBOQReport } = await import('../src/utils/pdfGenerator.js');
+const { calculateSolarSystem, formatNaira } = await import('../src/utils/calculations.js');
+const { DEFAULT_SETTINGS } = await import('../src/data/pricingDefaults.js');
+
+const calc = calculateSolarSystem({
+  appliances: [
+    { id: 'fans', qty: 6, watts: 75, hoursDay: 8, hoursNight: 6 },
+    { id: 'bulbs', qty: 12, watts: 15, hoursDay: 6, hoursNight: 6 },
+    { id: 'freezer', qty: 1, watts: 250, hoursDay: 10, hoursNight: 14 },
+  ],
+  sunHours: 4.8,
+  settings: DEFAULT_SETTINGS,
+  installerMarkupPercent: 15,
+});
+
+const nairaDoc = generateBOQReport({
+  calcResult: calc,
+  selectedTierIndex: 1,
+  settings: DEFAULT_SETTINGS,
+  clientName: 'Alhaji S. Adeleke',
+  quoteNumber: 0,
+});
+const nairaBytes = Buffer.from(nairaDoc.output('arraybuffer'), 'latin1');
+const nairaText = nairaBytes.toString('latin1');
+
+check('BOQ PDF generated', nairaBytes.length > 3000, `${nairaBytes.length} bytes`);
+check('PDF signature present', nairaText.startsWith('%PDF-'), nairaText.slice(0, 8));
+// The embedded font is what carries ₦. Confirm the font is actually referenced.
+check(
+  'embedded NotoSans font is referenced in the PDF',
+  nairaText.includes('NotoSans') || nairaText.includes('Noto') || /FontFile2/.test(nairaText)
+);
+// jsPDF writes a ToUnicode CMap for embedded fonts; if ₦ survived, its codepoint
+// must appear in that map.
+const hasNairaCMap =
+  nairaText.includes('20A6') || nairaText.includes('20a6') || nairaText.includes('<0020A6>');
+check('Naira codepoint present in font subset map', hasNairaCMap);
+check(
+  'formatNaira output actually contains U+20A6',
+  formatNaira(500).includes('₦'),
+  JSON.stringify(formatNaira(500))
+);
+
 console.log('\n[3] Native branch selection');
 const fs = await import('node:fs');
 const src = fs.readFileSync('src/utils/pdfExport.js', 'utf8');
@@ -49,8 +96,16 @@ check('native path uses Filesystem.writeFile', /Filesystem\.writeFile/.test(src)
 check('native path uses base64 encoding', /Encoding\.Base64/.test(src));
 check('native path opens the share sheet', /Share\.share/.test(src));
 check('splits data URI on first comma only', /dataUri\.slice\(dataUri\.indexOf\(','\) \+ 1\)/.test(src));
-check('no web-only doc.save() left in ScreenPDF', !/doc\.save\(/.test(
-  fs.readFileSync('src/components/ScreenPDF.jsx', 'utf8')
+// The export is now triggered from BOQScreen (the redesigned quote screen
+// replaced the old ScreenPDF), so assert the web-only path is absent there.
+check('no web-only doc.save() left in BOQScreen', !/doc\.save\(/.test(
+  fs.readFileSync('src/components/BOQScreen.jsx', 'utf8')
+));
+check('BOQScreen routes through exportPDF', /exportPDF\(/.test(
+  fs.readFileSync('src/components/BOQScreen.jsx', 'utf8')
+));
+check('BOQScreen surfaces export errors to the user', /exportError/.test(
+  fs.readFileSync('src/components/BOQScreen.jsx', 'utf8')
 ));
 
 console.log('\n[4] Runtime behaviour of exportPDF on a native device (stubbed bridge)');

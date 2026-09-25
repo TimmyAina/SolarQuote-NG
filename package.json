@@ -1,15 +1,22 @@
 {
   "name": "solarquote-ng",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "smoke": "node scripts/smoke-check.mjs",
+    "check:catalog": "node scripts/catalog-check.mjs",
+    "check:counter": "node scripts/counter-check.mjs",
     "check:pdf": "node --experimental-loader=./scripts/stubs/loader.mjs --no-warnings scripts/pdf-export-check.mjs",
-    "check:edges": "node scripts/edge-cases.mjs"
+    "check:edges": "node scripts/edge-cases.mjs",
+    "check:billing": "node scripts/billing-check.mjs",
+    "check:usercatalog": "node scripts/usercatalog-check.mjs",
+    "check:font": "node scripts/font-check.mjs verify .tmp-font.bin",
+    "check:render": "node scripts/render-check.mjs",
+    "check:all": "node scripts/smoke-check.mjs && node scripts/edge-cases.mjs && node scripts/catalog-check.mjs && node scripts/counter-check.mjs && node scripts/billing-check.mjs && node scripts/usercatalog-check.mjs"
   },
   "dependencies": {
     "@capacitor/filesystem": "^6.0.2",
@@ -30,8 +37,10 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
+    "jsdom": "^30.1.1",
     "postcss": "^8.5.2",
     "tailwindcss": "^3.4.17",
     "vite": "^6.1.0"
   }
 }
+

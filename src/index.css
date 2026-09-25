@@ -1,31 +1,264 @@
+/**
+ * SolarQuote NG — Design System (UI/UX Pro Max: "Trust & Authority")
+ * Token-driven theming: every surface reads from a CSS variable, so light and
+ * dark are ONE component tree, never two hardcoded hex palettes.
+ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --sq-primary: #0f172a;
+    --sq-primary-fg: #ffffff;
+    --sq-accent: #0369a1;
+    --sq-accent-fg: #ffffff;
+    --sq-sun: #d97706;
+
+    --sq-canvas: #f8fafc;
+    --sq-surface: #ffffff;
+    --sq-surface-2: #f1f5f9;
+    --sq-surface-3: #e8ecf1;
+    --sq-line: #e2e8f0;
+    --sq-line-strong: #cbd5e1;
+
+    --sq-ink: #020617;
+    --sq-ink-2: #334155;
+    --sq-ink-3: #64748b;
+
+    --sq-accent-soft: #e0f2fe;
+    --sq-ok: #047857;
+    --sq-ok-soft: #d1fae5;
+    --sq-warn: #b45309;
+    --sq-warn-soft: #fef3c7;
+    --sq-danger: #dc2626;
+    --sq-danger-soft: #fee2e2;
+
+    --sq-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+    --sq-shadow-lg: 0 2px 4px rgba(15, 23, 42, 0.05), 0 20px 48px -20px rgba(15, 23, 42, 0.28);
+    --sq-scrim: rgba(2, 6, 23, 0.5);
+
+    color-scheme: light;
+  }
+
+  .dark {
+    --sq-primary: #0b1220;
+    --sq-primary-fg: #f8fafc;
+    --sq-accent: #0ea5e9;
+    --sq-accent-fg: #04121f;
+    --sq-sun: #fbbf24;
+
+    --sq-canvas: #070c16;
+    --sq-surface: #101a2c;
+    --sq-surface-2: #17233a;
+    --sq-surface-3: #1e2d47;
+    --sq-line: #22304a;
+    --sq-line-strong: #33456180;
+
+    --sq-ink: #f1f5f9;
+    --sq-ink-2: #b6c4d6;
+    --sq-ink-3: #8598b0;
+
+    --sq-accent-soft: #08243a;
+    --sq-ok: #34d399;
+    --sq-ok-soft: #062b23;
+    --sq-warn: #fbbf24;
+    --sq-warn-soft: #2e2308;
+    --sq-danger: #f87171;
+    --sq-danger-soft: #331114;
+
+    --sq-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
+    --sq-shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.4), 0 20px 48px -20px rgba(0, 0, 0, 0.85);
+    --sq-scrim: rgba(2, 6, 23, 0.68);
+
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background-color: #090e1a;
-    color: #f1f5f9;
+    /* Plus Jakarta Sans has no Naira glyph, so ₦ falls through to the next
+       family. Noto Sans / Segoe UI Symbol guarantee a U+20A6 provider on
+       every platform, otherwise currency renders as a blank box. */
+    font-family: 'Plus Jakarta Sans', 'Noto Sans', 'Segoe UI Symbol', 'Segoe UI',
+      system-ui, -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    background-color: var(--sq-canvas);
+    color: var(--sq-ink);
     -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+
+  /* Numeric data must never reflow while typing or animating */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
   }
 }
 
-/* Custom modern scrollbar */
+
+@layer components {
+  /* Card — the single surface primitive used everywhere */
+  .sq-card {
+    background-color: var(--sq-surface);
+    border: 1px solid var(--sq-line);
+    border-radius: 1rem;
+    box-shadow: var(--sq-shadow);
+  }
+
+  .sq-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    transition: background-color 180ms ease, border-color 180ms ease,
+      color 180ms ease, transform 120ms ease, box-shadow 180ms ease;
+    user-select: none;
+  }
+  .sq-btn:active:not(:disabled) {
+    transform: scale(0.985);
+  }
+  .sq-btn:focus-visible {
+    outline: 2px solid var(--sq-accent);
+    outline-offset: 2px;
+  }
+  .sq-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .sq-btn-primary {
+    background-color: var(--sq-accent);
+    color: var(--sq-accent-fg);
+    box-shadow: var(--sq-shadow);
+  }
+  .sq-btn-primary:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+
+  .sq-btn-ghost {
+    background-color: var(--sq-surface);
+    color: var(--sq-ink-2);
+    border: 1px solid var(--sq-line);
+  }
+  .sq-btn-ghost:hover:not(:disabled) {
+    background-color: var(--sq-surface-2);
+    color: var(--sq-ink);
+  }
+
+  .sq-input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 0.75rem;
+    background-color: var(--sq-surface);
+    border: 1px solid var(--sq-line);
+    border-radius: 0.75rem;
+    color: var(--sq-ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+  .sq-input:focus {
+    outline: none;
+    border-color: var(--sq-accent);
+    box-shadow: 0 0 0 3px var(--sq-accent-soft);
+  }
+
+  .sq-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid var(--sq-line);
+    background-color: var(--sq-surface);
+    color: var(--sq-ink-2);
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+  }
+  .sq-chip:hover {
+    border-color: var(--sq-line-strong);
+    color: var(--sq-ink);
+  }
+  .sq-chip[data-active='true'] {
+    background-color: var(--sq-accent);
+    border-color: var(--sq-accent);
+    color: var(--sq-accent-fg);
+  }
+
+  .sq-label {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sq-ink-3);
+  }
+}
+
+/* Safe-area helpers for fixed headers / tab bars / CTA bars */
+.sq-safe-b {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
+.sq-safe-t {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+}
+
+/* Scrollbars — themed and unobtrusive */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #0b132b;
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--sq-line-strong);
   border-radius: 9999px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--sq-ink-3);
+}
+
+@keyframes sq-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.sq-rise {
+  animation: sq-rise 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

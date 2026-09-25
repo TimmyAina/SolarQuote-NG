@@ -3,6 +3,9 @@
  */
 import { DEFAULT_SETTINGS } from '../data/pricingDefaults.js';
 
+// Re-exported so UI layers can import defaults and the normaliser from one place.
+export { DEFAULT_SETTINGS };
+
 const isPlainObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 /**
