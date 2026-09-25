@@ -1,0 +1,24 @@
+  === VISUAL AUDIT ===
+  static server on 4319
+  server responding
+  chrome + CDP attached
+  fresh install -> dark=false scrollH=844 viewportH=844 stored="{\"installerName\":\"SolarQuote Technologies Ltd\",\"installerPhone\":\"+234 803 123 4567\",\"installerEmail\":\"quotes@solarquoteng.com\",\"installerAddress\":\"Plot 14 Trans-Amadi, Port Harcourt / Ikeja, Lagos\",\"installerTagline\":\"Certified Renewable Energy & Electrical Engineering\",\"installerLogo\":null,\"themeMode\":\"system\",\"experienceMode\":\"pro\",\"onboarded\":false,\"petrolPricePerLiter\":1200,\"dieselPricePerLiter\":1350,\"kerosenePricePerLiter\":900,\"lpgPricePerKg\":1200,\"discoTariffPerKWh\":209.5,\"discoBand\":\"A\",\"discoId\":\"IKEDC\",\"gridHoursPerDay\":20,\"generatorHoursPerDay\":7,\"generatorFuelType\":\"diesel\",\"genFuelConsumptionPerHour\":1.8,\"sunHours\":4.8,\"batteryDoD\":0.85,\"systemLossFactor\":1.28,\"safetySurgeFactor\":1.25,\"installationPercent\":0.15,\"equipment\":{\"inverters\":{\"economy\":{\"brand\":\"Felicity / Must Hybrid\",\"costPerKVA\":180000,\"warranty\":\"18 Months Warranty\"},\"standard\":{\"brand\":\"Deye / Sunsynk Hybrid IP65\",\"costPerKVA\":260000,\"warranty\":\"5 Years Warranty\"},\"premium\":{\"brand\":\"Victron Energy MultiPlus-II / Quattro\",\"costPerKVA\":420000,\"warranty\":\"5-10 Years Global Warranty\"}},\"batteries\":{\"economy\":{\"brand\":\"Felicity Solar LiFePO4 48V\",\"costPerKWh\":260000,\"cycles\":\"3,000+ Cycles (8+ yrs)\"},\"standard\":{\"brand\":\"Pylontech / Dyness LiFePO4 48V\",\"costPerKWh\":330000,\"cycles\":\"6,000+ Cycles (15 yrs)\"},\"premium\":{\"brand\":\"Victron / Freedom Won LiFePO4 48V\",\"costPerKWh\":480000,\"cycles\":\"8,000+ Cycles (20 yrs)\"}},\"panels\":{\"economy\":{\"brand\":\"Tier-1 Mono 550W\",\"wattRating\":550,\"costPerWatt\":420,\"panelPrice\":231000},\"standard\":{\"brand\":\"Jinko / Longi 600W Bifacial\",\"wattRating\":600,\"costPerWatt\":460,\"panelPrice\":276000},\"premium\":{\"brand\":\"Canadian Solar / Maxeon 700W N-Type\",\"wattRating\":700,\"costPerWatt\":520,\"panelPrice\":364000}},\"bosPerKVA\":55000,\"protectionBox\":85000}}"
+  shot 01-welcome-intro  overflow=0 tiny=0 unlabeled=0 contrast=0
+  tap: {"ok":true,"label":"Get Started"}
+  shot 02-welcome-mode  overflow=0 tiny=0 unlabeled=0 contrast=0
+  tap: {"ok":true,"label":"Continue"}
+  shot 03-welcome-plan  overflow=0 tiny=0 unlabeled=0 contrast=0
+  tap: {"ok":true,"label":"Start Building Quotes"}
+  shot 04-home  overflow=0 tiny=0 unlabeled=0 contrast=1   <-- inspect
+  shot 05-catalog  overflow=0 tiny=0 unlabeled=0 contrast=1   <-- inspect
+  shot 06-quote-loads  overflow=0 tiny=0 unlabeled=1 contrast=0   <-- inspect
+  shot 07-boq  overflow=0 tiny=0 unlabeled=0 contrast=0
+  shot 08-wallet  overflow=0 tiny=0 unlabeled=0 contrast=0
+  shot 09-settings  overflow=0 tiny=0 unlabeled=1 contrast=0   <-- inspect
+  product card: Sunsynk
+9
+  shot 10-product-detail  overflow=0 tiny=0 unlabeled=0 contrast=1   <-- inspect
+  shot 11-catalog-dark  overflow=0 tiny=0 unlabeled=0 contrast=1   <-- inspect
+  shot 12-boq-dark  overflow=0 tiny=0 unlabeled=0 contrast=0
+  shot 13-wallet-dark  overflow=0 tiny=0 unlabeled=0 contrast=0
+  shot 14-home-320  overflow=0 tiny=0 unlabeled=0 contrast=1   <-- inspect

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Catalog + Energy Cost verification
  * ---------------------------------------------------------------------------
  * Guards the four requirements that are easy to regress:
@@ -111,7 +111,7 @@ console.log('\n[E1] Nigerian energy price data');
 check('5 NERC bands present', GRID_BANDS.length === 5);
 check('11 DisCos present', DISCOS.length === 11);
 check(
-  'petrol default is realistic (₦1000–₦1500)',
+  'petrol default is realistic (â‚¦1000â€“â‚¦1500)',
   GRID_BANDS.length === 5
 );
 
@@ -124,7 +124,7 @@ const base = {
   generatorFuelType: 'diesel',
 };
 const bandA = calculateRunningCosts({ dailyKWh: 10, genKVA: 5, settings: base });
-console.log(`    Band A: ₦${bandA.monthlyTotal.toLocaleString()}/mo, ₦${bandA.effectiveCostPerKWh}/kWh effective`);
+console.log(`    Band A: â‚¦${bandA.monthlyTotal.toLocaleString()}/mo, â‚¦${bandA.effectiveCostPerKWh}/kWh effective`);
 check('Band A monthly cost is positive', bandA.monthlyTotal > 0);
 check(
   'effective cost EXCEEDS the grid tariff (generator is real)',
@@ -137,7 +137,7 @@ const bandE = calculateRunningCosts({
   genKVA: 5,
   settings: { ...base, discoTariffPerKWh: 40, gridHoursPerDay: 6 },
 });
-console.log(`    Band E: ₦${bandE.monthlyTotal.toLocaleString()}/mo`);
+console.log(`    Band E: â‚¦${bandE.monthlyTotal.toLocaleString()}/mo`);
 check(
   'low-tariff band still costs MORE in practice',
   bandE.monthlyTotal > bandA.monthlyTotal,
@@ -277,11 +277,45 @@ check(
   `${schoolResult.recommendedInverterKVA} kVA`
 );
 
+console.log('\n[C11] No hardcoded catalog size, no duplicate products');
+// Regression: the UI said "Search 395 products" while the catalog held 438, and
+// two LONGi panels shared a name. Counts must be derived, never typed.
+{
+  const { readFileSync, readdirSync } = await import('node:fs');
+  const { TOTAL_PRODUCT_COUNT } = await import('../src/data/catalog/index.js');
+
+  check('TOTAL_PRODUCT_COUNT matches the array', TOTAL_PRODUCT_COUNT === ALL_PRODUCTS.length, `${TOTAL_PRODUCT_COUNT}/${ALL_PRODUCTS.length}`);
+  check('the catalog has 400+ products', TOTAL_PRODUCT_COUNT >= 400, `${TOTAL_PRODUCT_COUNT}`);
+
+  // Any hand-typed product count in the UI is a bug waiting to happen.
+  const stale = [];
+  ['src/components', 'src/data'].forEach((dir) => {
+    readdirSync(dir).forEach((name) => {
+      if (!/\.(jsx?|mjs)$/.test(name)) return;
+      const p = `${dir}/${name}`;
+      const st = readFileSync(p, 'utf8');
+      [...st.matchAll(/(?:Search\s+|search\s+)(\d{3})\s+products/g)].forEach((x) => {
+        if (Number(x[1]) !== TOTAL_PRODUCT_COUNT) stale.push(`${p}: "${x[0].trim()}"`);
+      });
+    });
+  });
+  check('no stale hardcoded product count in the UI', stale.length === 0, stale.join('; '));
+
+  // Two rows may not share name+brand+kind, or the grid shows the same model
+  // twice and a search returns a duplicate.
+  const seenKey = new Map();
+  ALL_PRODUCTS.forEach((p) => {
+    const k = `${p.kind}|${p.brand}|${p.name}`;
+    seenKey.set(k, (seenKey.get(k) || 0) + 1);
+  });
+  const dupes = [...seenKey.entries()].filter(([, n]) => n > 1);
+  check('no duplicate name+brand rows', dupes.length === 0, dupes.map(([k, n]) => `x${n} ${k}`).join('; '));
+}
+
+
 console.log(
   failures === 0
     ? '\n=== CATALOG + ENERGY: ALL PASSED ==='
     : `\n=== ${failures} FAILURE(S) ===`
 );
 process.exit(failures === 0 ? 0 : 1);
-
-check('new price is unchanged', priceForCondition(100000, 'new') === 100000);

@@ -22,7 +22,11 @@
     /* Primary / accent — emerald, the "solar + sustainable + money" green */
     --sq-primary: #064e3b;
     --sq-primary-fg: #ffffff;
-    --sq-accent: #059669;
+    /* Emerald, darkened one step from #059669. The skill's palette proposes
+       #059669, but white label text on it measures 3.77:1 and FAILS WCAG AA
+       (4.5:1) — and this is the colour of the main CTA on every screen.
+       #047857 measures 5.48:1 and is visually near-identical. */
+    --sq-accent: #047857;
     --sq-accent-fg: #ffffff;
     --sq-sun: #d97706;
 
@@ -35,7 +39,10 @@
 
     --sq-ink: #052e24;
     --sq-ink-2: #2f5d50;
-    --sq-ink-3: #5b8577;
+    /* Tertiary text. #5b8577 measured 3.93:1 on canvas, 4.15:1 on surface and
+       3.65:1 on the accent-soft fill — all below AA. #5F7169 measures 4.91 /
+       5.18 / 4.57, so captions and metadata are legible on every surface. */
+    --sq-ink-3: #5F7169;
 
     --sq-accent-soft: #d1fae5;
     --sq-ok: #047857;
@@ -217,6 +224,13 @@
     border: 1px solid var(--sq-line);
     background-color: var(--sq-surface);
     color: var(--sq-ink-2);
+    /* A chip is a single unit of text: without this the item count wrapped
+       onto its own line once the catalog passed three digits. */
+    white-space: nowrap;
+    flex-shrink: 0;
+    /* These are the primary section filters, often tapped with a thumb in the
+       field. At 32px they sat well under the 44px WCAG 2.1 AA minimum. */
+    min-height: 44px;
     font-size: 0.75rem;
     font-weight: 700;
     white-space: nowrap;

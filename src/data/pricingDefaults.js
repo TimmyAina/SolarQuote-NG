@@ -251,7 +251,7 @@ export const FEATURES = [
   {
     id: 'catalog_browse',
     label: 'Product catalog',
-    description: 'Browse and search 395 products with images and specifications',
+    description: 'Browse and search the full product range with images and specifications',
     tier: 'free',
     core: true,
   },

@@ -41,7 +41,7 @@ const MODES = [
 ];
 
 const HIGHLIGHTS = [
-  { icon: Sparkles, text: '395 real products with measured power draw' },
+  { icon: Sparkles, text: '400+ real products with measured power draw' },
   { icon: ShieldCheck, text: 'NERC tariffs and pump prices built in' },
   { icon: Wrench, text: 'Installable equipment, not just theory' },
 ];

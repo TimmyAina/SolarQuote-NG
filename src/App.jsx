@@ -126,12 +126,12 @@ function Shell() {
                 type="button"
                 onClick={() => navigate('home')}
                 aria-label="Back to dashboard"
-                className="w-9 h-9 rounded-xl border border-line bg-surface text-ink-2 flex items-center justify-center shrink-0"
+                className="w-11 h-11 rounded-xl border border-line bg-surface text-ink-2 flex items-center justify-center shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
             )}
-            <div className="w-9 h-9 rounded-xl bg-accent text-accent-fg flex items-center justify-center shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-accent text-accent-fg flex items-center justify-center shrink-0">
               <Sun className="w-5 h-5" strokeWidth={2.2} />
             </div>
             <div className="min-w-0">
@@ -150,7 +150,7 @@ function Shell() {
               onClick={() => setExperienceMode(isSimple ? 'pro' : 'simple')}
               aria-label={isSimple ? 'Switch to professional mode' : 'Switch to simple mode'}
               title={isSimple ? 'Professional mode' : 'Simple mode'}
-              className="w-9 h-9 rounded-xl border border-line bg-surface text-ink-2 flex items-center justify-center"
+              className="w-11 h-11 rounded-xl border border-line bg-surface text-ink-2 flex items-center justify-center"
             >
               {isSimple ? <User className="w-4 h-4" /> : <Wrench className="w-4 h-4" />}
             </button>
@@ -159,7 +159,7 @@ function Shell() {
               onClick={toggleTheme}
               aria-label={`Theme: ${themeLabel}. Tap to change.`}
               title={`Theme: ${themeLabel}`}
-              className="w-9 h-9 rounded-xl border border-line bg-surface text-ink-2 flex items-center justify-center"
+              className="w-11 h-11 rounded-xl border border-line bg-surface text-ink-2 flex items-center justify-center"
             >
               {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>

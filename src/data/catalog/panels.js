@@ -15,7 +15,7 @@ const ROWS = [
   ['Hi-MO 6 LR5-72HTH',     'LONGi',        580,  285000, { type: 'Mono PERC', vocV: 41.8, vmpV: 31.2, iscA: 13.9, efficiencyPct: 22.4, warrantyYears: 25, bifacial: false }],
   ['Hi-MO 7 LR5-72HTH',     'LONGi',        605,  298000, { type: 'N-Type', vocV: 38.5, vmpV: 33.0, iscA: 15.7, efficiencyPct: 23.2, warrantyYears: 30, bifacial: false }],
   ['Hi-MO 8 LR5-54HTH',     'LONGi',        550,  268000, { type: 'Mono PERC', vocV: 41.4, vmpV: 31.2, iscA: 13.3, efficiencyPct: 21.6, warrantyYears: 25, bifacial: false }],
-  ['Hi-MO 6 LR5-54HTH',     'LONGi',        425,  212000, { type: 'Mono PERC', vocV: 41.4, vmpV: 31.0, iscA: 10.5, efficiencyPct: 21.3, warrantyYears: 25, bifacial: false }],
+  ['Hi-MO 6 LR5-42HTH',     'LONGi',        425,  212000, { type: 'Mono PERC', vocV: 41.4, vmpV: 31.0, iscA: 10.5, efficiencyPct: 21.3, warrantyYears: 25, bifacial: false }],
 
   ['JKM550N-72HL4',         'Jinko Solar',   550,  272000, { type: 'N-Type', vocV: 37.6, vmpV: 31.4, iscA: 14.6, efficiencyPct: 22.4, warrantyYears: 30, bifacial: true }],
   ['JKM600N-72HL4',         'Jinko Solar',   600,  298000, { type: 'N-Type', vocV: 37.8, vmpV: 31.6, iscA: 15.9, efficiencyPct: 23.1, warrantyYears: 30, bifacial: true }],

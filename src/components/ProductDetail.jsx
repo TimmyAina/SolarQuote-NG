@@ -145,7 +145,7 @@ export function ProductDetail({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-scrim text-white flex items-center justify-center"
+            className="absolute top-3 right-3 w-11 h-11 rounded-full bg-scrim text-white flex items-center justify-center"
           >
             <X className="w-4 h-4" />
           </button>

@@ -1,17 +1,25 @@
-/**
+﻿/**
  * Product Visual
  * ---------------------------------------------------------------------------
- * Renders a product image when one is bundled, and otherwise draws a branded
- * tile from the product's own data (brand initials + category glyph + name).
+ * Renders a product image when one is bundled, and otherwise builds a tile from
+ * the product's own data: the manufacturer's REAL logo when one exists, else the
+ * brand's own colour with its name, plus a category glyph.
  *
  * Why not hotlink photos? Retailer/manufacturer URLs break, hotlink-block, and
- * fail offline — which on a tablet in the field means a catalogue full of broken
+ * fail offline â€” which on a tablet in the field means a catalogue full of broken
  * image boxes. A generated tile is always present, always on-brand, zero bytes
  * of network, and can be replaced with a real photo simply by setting `image`
  * on a catalog row.
+ *
+ * Why the brand registry? An earlier version hashed the brand NAME into an
+ * arbitrary hue and painted a single letter, which meant every Deye product
+ * looked identical and none of them matched the emerald design system â€” while
+ * the manufacturer tabs right above showed the real logos. The tabs and the
+ * cards now share one source of truth.
  */
 import React from 'react';
 import { Zap, BatteryCharging, Sun, Laptop, Monitor, Plug, Wrench } from 'lucide-react';
+import { getBrand } from '../data/brands.js';
 
 const GLYPH = {
   inverter: Zap,
@@ -23,33 +31,36 @@ const GLYPH = {
   part: Wrench,
 };
 
-/** Stable hue per brand so the same brand always gets the same tile colour. */
-function hueFor(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i += 1) {
-    h = (h * 31 + str.charCodeAt(i)) % 360;
-  }
-  return h;
+/** Up to two letters from the meaningful words of a brand name. */
+function initialsFor(name = '') {
+  const words = String(name)
+    .replace(/[^A-Za-z0-9 ]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!words.length) return '?';
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
 }
 
-const initials = (brand = '') =>
-  brand
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join('');
-
-export function ProductVisual({ product, size = 'md', className = '' }) {
+/**
+ * @param showBrand  Render the brand initials inside the tile. True by default
+ *   because most call sites (product sheet, home highlights) have no adjacent
+ *   brand badge. The catalogue grid sets it to false: the card already overlays
+ *   a <BrandMark> badge, and showing "DE" twice on one card read as a glitch.
+ */
+export function ProductVisual({ product, size = 'md', className = '', showBrand = true }) {
   const Icon = GLYPH[product.kind] || Plug;
-  const brand = product.brand || 'SolarQuote';
-  const hue = hueFor(brand);
+  const brandName = product.brand || 'SolarQuote';
+  const brand = getBrand(brandName);
+  // The brand's real colour, not a hash of its name, so the tile belongs to the
+  // same palette as the rest of the app.
+  const tint = brand?.color || 'var(--sq-accent)';
 
   if (product.image) {
     return (
       <img
         src={product.image}
-        alt={`${brand} ${product.name}`}
+        alt={`${brandName} ${product.name}`}
         loading="lazy"
         className={`object-cover w-full h-full ${className}`}
       />
@@ -58,25 +69,39 @@ export function ProductVisual({ product, size = 'md', className = '' }) {
 
   const dim = size === 'sm' ? 'text-[10px]' : size === 'lg' ? 'text-sm' : 'text-xs';
   const iconSize = size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-10 h-10' : 'w-6 h-6';
+  const pad = size === 'sm' ? 'p-2' : size === 'lg' ? 'p-5' : 'p-3';
+
+  // A real bundled logo gets a clean tile, so it is recognisable at a glance.
+  if (brand?.logo) {
+    return (
+      <div
+        className={`w-full h-full flex items-center justify-center ${className}`}
+        style={{ background: `linear-gradient(135deg, ${tint}14, ${tint}2E)` }}
+      >
+        <img
+          src={brand.logo}
+          alt={`${brandName} logo`}
+          loading="lazy"
+          className={`object-contain ${size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-16 h-16' : 'w-9 h-9'}`}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
-      className={`w-full h-full flex flex-col items-center justify-center gap-1.5 relative overflow-hidden ${className}`}
+      className={`relative w-full h-full flex items-center justify-center ${pad} ${className}`}
       style={{
-        background: `linear-gradient(140deg, hsl(${hue} 62% 46%), hsl(${(hue + 40) % 360} 58% 34%))`,
+        background: `linear-gradient(135deg, ${tint}1F, ${tint}3D)`,
+        color: tint,
       }}
-      role="img"
-      aria-label={`${brand} ${product.name}`}
     >
-      {/* soft highlight so the tile reads as a surface, not a flat swatch */}
-      <div
-        className="absolute inset-0"
-        style={{ background: 'radial-gradient(circle at 30% 20%, rgba(255,255,255,0.28), transparent 60%)' }}
-      />
-      <Icon className={`${iconSize} text-white/95 relative`} strokeWidth={1.75} />
-      <span className={`${dim} font-extrabold tracking-tight text-white relative`}>
-        {initials(brand)}
-      </span>
+      <Icon className={iconSize} strokeWidth={1.75} aria-hidden="true" />
+      {showBrand && (
+        <span className={`absolute bottom-2 right-2 font-extrabold leading-none opacity-80 ${dim}`} aria-hidden="true">
+          {initialsFor(brandName)}
+        </span>
+      )}
     </div>
   );
 }

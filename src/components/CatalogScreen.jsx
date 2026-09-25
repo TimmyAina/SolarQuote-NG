@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import {
   CATALOG_SECTIONS, searchCatalog, powerLabel, mergeUserCatalog, applyPriceOverrides,
+  TOTAL_PRODUCT_COUNT,
 } from '../data/catalog/index.js';
 import { ProductVisual } from './ProductVisual.jsx';
 import { ProductDetail } from './ProductDetail.jsx';
@@ -121,8 +122,10 @@ export function CatalogScreen({ isSimple, onAddLoad, onLockedAdd, currentLoads =
             onClick={onLockedAdd}
             className="sq-btn sq-btn-ghost w-full"
           >
-            <Lock className="w-4 h-4" />
-            Add your own products &amp; prices — upgrade
+            <Lock className="w-4 h-4 shrink-0" />
+            {/* Short enough to stay on one line; the old wording wrapped to two
+                lines and left the padlock stranded at the far left. */}
+            <span className="truncate">Add your own products - upgrade</span>
           </button>
         )}
         {userCatalog.customProducts.length > 0 && (
@@ -190,7 +193,7 @@ function CatalogFilters({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search 395 products, brands or specs…"
+          placeholder={`Search ${TOTAL_PRODUCT_COUNT} products, brands or specs…`}
           aria-label="Search the product catalog"
           className="sq-input pl-9 pr-9"
         />
@@ -213,7 +216,7 @@ function CatalogFilters({
           data-active={section === ALL}
           onClick={() => { setSection(ALL); setBrand(null); }}
         >
-          All <span className="opacity-70 tnum">395</span>
+          All <span className="opacity-70 tnum">{TOTAL_PRODUCT_COUNT}</span>
         </button>
         {CATALOG_SECTIONS.map((s) => (
           <button
@@ -300,7 +303,9 @@ function ProductGrid({ products, onSelect, total }) {
               className="sq-card overflow-hidden text-left hover:shadow-lift transition-shadow active:scale-[0.99] relative"
             >
               <div className="h-24 w-full">
-                <ProductVisual product={p} />
+                {/* The card overlays its own <BrandMark> badge, so the tile must not
+                  repeat the brand initials as well. */}
+              <ProductVisual product={p} showBrand={false} />
               </div>
               {/* Manufacturer mark, so the producer is identifiable on the card */}
               <span className="absolute top-1.5 left-1.5">

@@ -3,7 +3,7 @@
  * ---------------------------------------------------------------------------
  * The list of things a site runs. Two entry routes:
  *   - pick a facility preset for a fast, sane starting point
- *   - browse the 395-item catalog and add exact models
+ *   - browse the full catalog and add exact models
  *
  * Simple mode shows counts and running watts. Professional mode adds editable
  * wattages, day/night hours and surge figures.
@@ -201,7 +201,7 @@ function LoadRow({ item, isSimple, onQty, onField }) {
             type="button"
             onClick={() => onQty((item.qty || 0) - 1)}
             aria-label={`Remove one ${name}`}
-            className="w-9 h-9 rounded-lg border border-line bg-surface-2 text-ink-2 flex items-center justify-center"
+            className="w-11 h-11 rounded-lg border border-line bg-surface-2 text-ink-2 flex items-center justify-center"
           >
             {item.qty <= 1 ? <Trash2 className="w-3.5 h-3.5" /> : '−'}
           </button>
@@ -218,7 +218,7 @@ function LoadRow({ item, isSimple, onQty, onField }) {
             type="button"
             onClick={() => onQty((item.qty || 0) + 1)}
             aria-label={`Add one ${name}`}
-            className="w-9 h-9 rounded-lg bg-accent text-accent-fg flex items-center justify-center"
+            className="w-11 h-11 rounded-lg bg-accent text-accent-fg flex items-center justify-center"
           >
             +
           </button>

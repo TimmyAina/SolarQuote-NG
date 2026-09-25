@@ -20,9 +20,12 @@ const TABS = [
 
 export function BottomTabs({ active, onChange }) {
   return (
+    // The bar is OPAQUE, not frosted. At bg-surface/95 the saturated product-card
+    // gradients in the catalogue bled through the bar and the labels became hard
+    // to read; a field tool needs a solid navigation rail.
     <nav
       aria-label="Main navigation"
-      className="fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-line sq-safe-b"
+      className="fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-line sq-safe-b"
     >
       <div className="mx-auto max-w-2xl flex items-stretch px-1">
         {TABS.map((t) => {

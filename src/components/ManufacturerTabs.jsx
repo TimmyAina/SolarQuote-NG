@@ -11,7 +11,9 @@
 import React, { useRef, useEffect } from 'react';
 import { BrandMark } from './BrandMark.jsx';
 import { groupingFor } from '../data/brands.js';
-import { Plug, Wrench, Sun, Zap, BatteryCharging, Laptop, Monitor, Lightbulb } from 'lucide-react';
+import {
+  Plug, Wrench, Sun, Zap, BatteryCharging, Laptop, Monitor, Lightbulb, Package,
+} from 'lucide-react';
 
 const ALL_GROUPS = '__all__';
 
@@ -20,7 +22,18 @@ const CATEGORY_ICON = {
   lighting: Lightbulb, cooling: Zap, refrigeration: BatteryCharging, kitchen: Plug,
   computing: Laptop, entertainment: Monitor, security: Lightbulb, pumps: Wrench,
   part: Wrench, inverter: Zap, battery: BatteryCharging, panel: Sun,
+  // "Generic" is the placeholder maker for unbranded rows (parts, and any
+  // appliance or desktop without a real brand). Without this it rendered an
+  // empty tinted square, which reads as a broken image.
+  generic: Package,
 };
+
+/** Picks the mark for a group, falling back rather than showing a blank box. */
+function iconForGroup(g) {
+  if (g.all) return null;
+  if (!g.isCategory && g.logo) return null; // a real logo is drawn instead
+  return CATEGORY_ICON[g.name] || CATEGORY_ICON[String(g.name).toLowerCase()] || Package;
+}
 
 export function ManufacturerTabs({ products, kind, selected, onSelect }) {
   const scroller = useRef(null);
@@ -57,7 +70,7 @@ export function ManufacturerTabs({ products, kind, selected, onSelect }) {
     >
       {tabs.map((g) => {
         const active = (selected || ALL_GROUPS) === g.key;
-        const Icon = CATEGORY_ICON[g.name];
+        const Icon = iconForGroup(g);
         return (
           <button
             key={g.key}
