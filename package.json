@@ -7,9 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "smoke": "node scripts/smoke-check.mjs"
+    "smoke": "node scripts/smoke-check.mjs",
+    "check:pdf": "node --experimental-loader=./scripts/stubs/loader.mjs --no-warnings scripts/pdf-export-check.mjs",
+    "check:edges": "node scripts/edge-cases.mjs"
   },
   "dependencies": {
+    "@capacitor/filesystem": "^6.0.2",
+    "@capacitor/share": "^6.0.1",
     "clsx": "^2.1.1",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { FileDown, ArrowLeft, Lock, CheckCircle2, ImagePlus, Trash2, PenLine } from 'lucide-react';
+import { FileDown, ArrowLeft, Lock, CheckCircle2, ImagePlus, Trash2, PenLine, AlertTriangle, Share2 } from 'lucide-react';
 import { generateBOQReport } from '../utils/pdfGenerator';
+import { exportPDF, isNativePlatform } from '../utils/pdfExport';
 import { formatNaira } from '../utils/calculations';
 import { SignaturePad } from './SignaturePad';
 
@@ -21,6 +22,7 @@ export function ScreenPDF({
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
+  const [exportError, setExportError] = useState(null);
 
   const activeTier = calcResult.tiers[selectedTierIndex];
 
@@ -49,30 +51,34 @@ export function ScreenPDF({
     setSettings(prev => ({ ...prev, installerLogo: null }));
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
+    if (isGenerating) return;
     setIsGenerating(true);
-    setTimeout(() => {
-      try {
-        const doc = generateBOQReport({
-          clientName,
-          clientPhone,
-          clientAddress,
-          selectedTierIndex,
-          calcResult,
-          settings,
-          docType,
-          logoBase64: settings.installerLogo || null,
-          signatureBase64
-        });
-        const prefix = docType === 'invoice' ? 'Invoice' : docType === 'receipt' ? 'Receipt' : 'BOQ';
-        doc.save(`SolarQuote_${clientName.replace(/\s+/g, '_')}_${prefix}.pdf`);
-      } catch (err) {
-        console.error("PDF error:", err);
-        alert("Failed to create PDF. Please retry.");
-      } finally {
-        setIsGenerating(false);
+    setExportError(null);
+    try {
+      const doc = generateBOQReport({
+        clientName,
+        clientPhone,
+        clientAddress,
+        selectedTierIndex,
+        calcResult,
+        settings,
+        docType,
+        logoBase64: settings.installerLogo || null,
+        signatureBase64
+      });
+      const prefix = docType === 'invoice' ? 'Invoice' : docType === 'receipt' ? 'Receipt' : 'BOQ';
+      const result = await exportPDF(doc, `SolarQuote_${clientName}_${prefix}`);
+
+      if (result.method === 'saved') {
+        setExportError("PDF saved to the app cache folder. Reopen the app to export again.");
       }
-    }, 250);
+    } catch (err) {
+      console.error("PDF error:", err);
+      setExportError(`Could not create the PDF: ${err?.message || 'unknown error'}`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -220,6 +226,12 @@ export function ScreenPDF({
       </div>
 
       {/* Action / Paywall Area */}
+      {exportError && (
+        <div className="bg-rose-950/60 border border-rose-600/40 rounded-2xl p-3 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <p className="text-[11px] text-rose-200 leading-relaxed">{exportError}</p>
+        </div>
+      )}
       <PaywallOrReady
         isUnlocked={isUnlocked}
         isGenerating={isGenerating}
@@ -279,6 +291,13 @@ export function ScreenPDF({
 
 function PaywallOrReady({ isUnlocked, isGenerating, onPayClick, onSimulateUnlock, onDownload, activeTier, docType = 'boq' }) {
   const docLabel = docType === 'invoice' ? 'Invoice' : docType === 'receipt' ? 'Receipt' : 'BOQ Quotation';
+  const isNative = isNativePlatform();
+  const actionLabel = isGenerating
+    ? "Building PDF..."
+    : isNative
+      ? `Save & Share ${docLabel}`
+      : `Download ${docLabel} PDF`;
+  const ActionIcon = isNative ? Share2 : FileDown;
   if (isUnlocked) {
     return (
       <div className="bg-emerald-950/60 border border-emerald-600/40 rounded-2xl p-5 text-center">
@@ -293,8 +312,8 @@ function PaywallOrReady({ isUnlocked, isGenerating, onPayClick, onSimulateUnlock
           disabled={isGenerating}
           className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg active:scale-95 transition"
         >
-          <FileDown className="w-4 h-4" />
-          <span>{isGenerating ? "Building PDF..." : `Download ${docLabel} PDF`}</span>
+          <ActionIcon className="w-4 h-4" />
+          <span>{actionLabel}</span>
         </button>
       </div>
     );
