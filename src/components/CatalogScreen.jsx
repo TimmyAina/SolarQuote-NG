@@ -190,7 +190,7 @@ function CatalogFilters({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search 395 products, brands or specsâ€¦"
+          placeholder="Search 395 products, brands or specs…"
           aria-label="Search the product catalog"
           className="sq-input pl-9 pr-9"
         />
@@ -278,9 +278,9 @@ function EmptyState({ query }) {
       <div className="w-14 h-14 rounded-2xl bg-surface-2 text-ink-3 mx-auto flex items-center justify-center mb-3">
         <Search className="w-6 h-6" />
       </div>
-      <p className="font-extrabold text-sm">No products match â€œ{query}â€</p>
+      <p className="font-extrabold text-sm">No products match “{query}”</p>
       <p className="text-xs text-ink-3 mt-1.5">
-        Try a brand name, a wattage, or a category like â€œfreezerâ€.
+        Try a brand name, a wattage, or a category like “freezer”.
       </p>
     </div>
   );

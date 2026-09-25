@@ -18,7 +18,11 @@
     "logos:apply": "node scripts/apply-brand-logos.mjs",
     "check:font": "node scripts/font-check.mjs verify .tmp-font.bin",
     "check:render": "node scripts/render-check.mjs",
-    "check:all": "node scripts/smoke-check.mjs && node scripts/edge-cases.mjs && node scripts/catalog-check.mjs && node scripts/counter-check.mjs && node scripts/billing-check.mjs && node scripts/usercatalog-check.mjs"
+    "check:all": "npm run check:encoding && node scripts/smoke-check.mjs && node scripts/edge-cases.mjs && node scripts/catalog-check.mjs && node scripts/counter-check.mjs && node scripts/billing-check.mjs && node scripts/usercatalog-check.mjs && npm run check:diagnostic && npm run check:render",
+    "check:diagnostic": "node scripts/diagnostic-probe.mjs",
+    "check:encoding": "node scripts/encoding-audit.mjs",
+    "fix:encoding": "node scripts/fix-encoding.mjs",
+    "check:bundle": "node scripts/bundle-check.mjs"
   },
   "dependencies": {
     "@capacitor/filesystem": "^6.0.2",
@@ -45,4 +49,3 @@
     "vite": "^6.1.0"
   }
 }
-

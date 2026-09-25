@@ -11,6 +11,12 @@ const isPlainObject = (value) => value !== null && typeof value === 'object' && 
 /**
  * Deep-merges persisted/partial settings over the shipped defaults, so a legacy
  * localStorage payload (or a half-written JSON blob) can never crash the engine.
+ *
+ * A nested object is only ever REPLACED by another plain object. Accepting a
+ * scalar in that position is the bug this guards: `{ equipment: null }` used to
+ * overwrite the whole equipment block with null, and the next calculate() threw
+ * "Cannot read properties of null (reading 'inverters')" — a white screen on a
+ * corrupt payload. Non-objects are now ignored so the defaults survive.
  */
 export function normalizeSettings(raw) {
   const merge = (base, override) => {
@@ -20,6 +26,11 @@ export function normalizeSettings(raw) {
       const value = override[key];
       if (isPlainObject(value) && isPlainObject(out[key])) {
         out[key] = merge(out[key], value);
+      } else if (isPlainObject(out[key])) {
+        // The default here is an object, so a scalar/array/null override is
+        // corruption, not intent. Keep the default rather than break the engine.
+        if (!isPlainObject(value)) return;
+        out[key] = value;
       } else if (value !== undefined) {
         out[key] = value;
       }

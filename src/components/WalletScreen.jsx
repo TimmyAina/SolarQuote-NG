@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Wallet & Plan screen
  * ---------------------------------------------------------------------------
  * Top-ups, subscription plans, expiry countdown and transaction history.
@@ -196,7 +196,7 @@ export function WalletScreen() {
                     ? 'Active'
                     : p.walletBased
                       ? 'Switch to this plan'
-                      : `Activate Â· ${formatNaira(p.price)}`}
+                      : `Activate · ${formatNaira(p.price)}`}
                 </button>
               </div>
             );
@@ -252,7 +252,7 @@ export function WalletScreen() {
                     <p className="text-[10px] text-ink-3 font-semibold">
                       {new Date(tx.at).toLocaleDateString('en-NG')}
                       {tx.quoteNumber !== null && tx.quoteNumber !== undefined
-                        ? ` Â· Quote #${tx.quoteNumber}`
+                        ? ` · Quote #${tx.quoteNumber}`
                         : ''}
                     </p>
                   </div>

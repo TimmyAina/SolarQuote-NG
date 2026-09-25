@@ -1,11 +1,11 @@
-﻿/**
+/**
  * Product Condition & Spares
  * ---------------------------------------------------------------------------
  * Nigerian installers routinely quote three grades of goods, and the grade
  * changes the price far more than any supplier discount does. This module owns
  * the condition model and a starter catalogue of the electrical parts and
  * consumables a solar job needs but which are not "products with a wattage
- * rating" â€” cable, MC4 connectors, breakers, glands, and so on.
+ * rating" — cable, MC4 connectors, breakers, glands, and so on.
  *
  * Two distinct ideas, deliberately kept apart:
  *   - `condition` applies to any product (new / refurbished / used) and carries a
@@ -35,15 +35,15 @@ export function priceForCondition(basePriceNGN, conditionId) {
 // prettier-ignore
 const PART_ROWS = [
   // DC cable, sold by the metre
-  ['4mmÂ² single-core solar cable (red)',  'Cables',       'per metre',  1850, '4mm'],
-  ['6mmÂ² single-core solar cable (red)',  'Cables',       'per metre',  2650, '6mm'],
-  ['10mmÂ² single-core solar cable (red)', 'Cables',       'per metre',  4200, '10mm'],
-  ['16mmÂ² battery cable (flex)',          'Cables',       'per metre',  9800, '16mm'],
-  ['25mmÂ² battery cable (flex)',          'Cables',       'per metre', 15400, '25mm'],
-  ['35mmÂ² battery cable (flex)',          'Cables',       'per metre', 21500, '35mm'],
-  ['50mmÂ² battery cable (flex)',          'Cables',       'per metre', 30800, '50mm'],
-  ['2.5mmÂ² AC cable (single)',            'Cables',       'per metre',  1100, '2.5mm'],
-  ['4mmÂ² AC cable (single)',              'Cables',       'per metre',  1700, '4mm'],
+  ['4mm² single-core solar cable (red)',  'Cables',       'per metre',  1850, '4mm'],
+  ['6mm² single-core solar cable (red)',  'Cables',       'per metre',  2650, '6mm'],
+  ['10mm² single-core solar cable (red)', 'Cables',       'per metre',  4200, '10mm'],
+  ['16mm² battery cable (flex)',          'Cables',       'per metre',  9800, '16mm'],
+  ['25mm² battery cable (flex)',          'Cables',       'per metre', 15400, '25mm'],
+  ['35mm² battery cable (flex)',          'Cables',       'per metre', 21500, '35mm'],
+  ['50mm² battery cable (flex)',          'Cables',       'per metre', 30800, '50mm'],
+  ['2.5mm² AC cable (single)',            'Cables',       'per metre',  1100, '2.5mm'],
+  ['4mm² AC cable (single)',              'Cables',       'per metre',  1700, '4mm'],
 
   // DC protection
   ['16A 550V DC fuse + holder',           'DC Protection', 'each',      3200, '16A'],
@@ -70,7 +70,7 @@ const PART_ROWS = [
   ['MC4 crimping tool',                   'Connectors',   'each',     18500, 'tool'],
   ['Cable gland M20 (pack of 10)',        'Connectors',   'pack',      2800, 'M20'],
   ['Cable gland M25 (pack of 10)',        'Connectors',   'pack',      3400, 'M25'],
-  ['Ring lug 25mmÂ² (pair)',               'Connectors',   'pair',      2600, '25mm'],
+  ['Ring lug 25mm² (pair)',               'Connectors',   'pair',      2600, '25mm'],
   ['Battery inter-connect lead',          'Connectors',   'each',      9800, 'lead'],
 
   // Mounting, racking & consumables
@@ -109,7 +109,7 @@ export const PARTS = PART_ROWS.map(([name, category, unit, price, gauge], i) => 
   indicativePriceNGN: price,
   // Parts commonly exist in grades, so they default to allowing conditions.
   allowCondition: true,
-  spec: `${category} Â· ${unit}`,
+  spec: `${category} · ${unit}`,
 }));
 
 export const isPart = (product) => product?.kind === 'part';

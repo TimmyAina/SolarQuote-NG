@@ -1,11 +1,19 @@
 /**
- * Encoding audit.
+ * Encoding audit (codepoint/structural based).
  *
- * Several edits in this session were made with PowerShell Set-Content, which
- * re-encodes UTF-8 files and can corrupt non-ASCII characters (the Naira sign
- * U+20A6, superscript ², en/em dashes) into mojibake. A corrupted Naira sign
- * would silently break every currency assertion, so the whole tree is scanned
- * for replacement characters and known mojibake byte sequences.
+ * Earlier revisions matched LITERAL mojibake strings. That was wrong twice over:
+ *   1. It cannot distinguish a genuine corruption from a file that legitimately
+ *      contains those characters because it is *documenting* them, and
+ *   2. once the corruption is repaired, the detector's own literals stop matching
+ *      anything, so a clean tree reported 343 false positives.
+ *
+ * This matches the STRUCTURAL signature instead. A CP1252 round trip always
+ * leaves a lead byte (U+00C2/U+00C3/U+00E2) immediately followed by a character
+ * CP1252 placed in the C1 range or the Latin-1 supplement. Real prose never has
+ * that adjacency, whatever the console happens to render.
+ *
+ * A U+FEFF anywhere other than byte 0 is also corruption: PowerShell's
+ * `-Encoding UTF8` writes one and it leaked into file bodies.
  *
  * Usage: node scripts/encoding-audit.mjs
  */
@@ -13,75 +21,73 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
 const ROOTS = ['src', 'scripts'];
-const EXTS = new Set(['.js', '.jsx', '.mjs', '.json', '.css', '.html']);
+const EXTRA = ['index.html', 'package.json', '.github/workflows/build-apk.yml'];
+const EXTS = new Set(['.js', '.jsx', '.mjs', '.json', '.css', '.html', '.yml']);
 
-// Sequences that only appear when UTF-8 was decoded as Latin-1/CP1252.
-const MOJIBAKE = [
-  ['â‚¦', 'Naira sign U+20A6'],
-  ['â€“', 'en dash U+2013'],
-  ['â€”', 'em dash U+2014'],
-  ['Â·', 'middle dot U+00B7'],
-  ['Â²', 'superscript two U+00B2'],
-  ['Ã', 'A-tilde (CP1252 leak)'],
-  ['ï»¿', 'BOM leaked into content'],
-];
+// Characters CP1252 puts in the C1 range / Latin-1 supplement for bytes that
+// actually belong to multi-byte UTF-8 sequences.
+const CP1252_TAIL = '\\u0080-\\u00BF\\u20AC\\u201A\\u0192\\u2122\\u0153\\u017D\\u0161\\u201E';
+const CP1252_PAIR = new RegExp(`[\\u00C2\\u00C3\\u00E2][${CP1252_TAIL}]`);
 
 const problems = [];
 
-function walk(dir) {
+function scan(file, text) {
+  const m = CP1252_PAIR.exec(text);
+  if (m) {
+    problems.push({
+      file,
+      line: text.slice(0, m.index).split('\n').length,
+      what: 'CP1252 round-trip sequence',
+      ctx: text.slice(Math.max(0, m.index - 25), m.index + 25).replace(/\r?\n/g, ' '),
+    });
+  }
+  const r = text.indexOf('\uFFFD');
+  if (r !== -1) {
+    problems.push({
+      file, line: text.slice(0, r).split('\n').length,
+      what: 'U+FFFD replacement character', ctx: '',
+    });
+  }
+  // A BOM is only valid as the very first character.
+  const bomAt = text.indexOf('\uFEFF');
+  if (bomAt > 0) {
+    problems.push({
+      file, line: text.slice(0, bomAt).split('\n').length,
+      what: 'stray U+FEFF inside content', ctx: '',
+    });
+  }
+}
+
+const walk = (dir) => {
   if (!existsSync(dir)) return;
   readdirSync(dir).forEach((name) => {
     const p = join(dir, name);
-    const s = statSync(p);
-    if (s.isDirectory()) { walk(p); return; }
+    if (statSync(p).isDirectory()) { walk(p); return; }
     if (!EXTS.has(extname(p))) return;
-    // Skip generated/vendored blobs that legitimately hold bytes, not text.
+    // Generated blobs hold bytes rather than prose.
     if (p.includes('noto-sans') || p.includes('brandLogos.generated')) return;
-
-    const text = readFileSync(p, 'utf8');
-    MOJIBAKE.forEach(([seq, what]) => {
-      let idx = text.indexOf(seq);
-      let hits = 0;
-      while (idx !== -1 && hits < 5) {
-        hits += 1;
-        const line = text.slice(0, idx).split('\n').length;
-        const ctx = text.slice(Math.max(0, idx - 30), idx + 30).replace(/\n/g, ' ');
-        problems.push({ file: p, what, line, ctx });
-        idx = text.indexOf(seq, idx + seq.length);
-      }
-    });
-
-    if (text.includes('\uFFFD')) {
-      const line = text.slice(0, text.indexOf('\uFFFD')).split('\n').length;
-      problems.push({ file: p, what: 'U+FFFD replacement character', line, ctx: '' });
-    }
+    scan(p, readFileSync(p, 'utf8'));
   });
-}
-
+};
 ROOTS.forEach(walk);
-['index.html', 'package.json', '.github/workflows/build-apk.yml'].forEach((p) => {
-  if (!existsSync(p)) return;
-  const text = readFileSync(p, 'utf8');
-  MOJIBAKE.forEach(([seq, what]) => {
-    if (text.includes(seq)) problems.push({ file: p, what, line: text.slice(0, text.indexOf(seq)).split('\n').length, ctx: '' });
-  });
-});
+EXTRA.forEach((p) => { if (existsSync(p)) scan(p, readFileSync(p, 'utf8')); });
 
 console.log(`\n=== ENCODING AUDIT: ${problems.length} problem(s) ===`);
-const grouped = new Map();
-problems.forEach((pr) => {
-  const k = pr.file;
-  if (!grouped.has(k)) grouped.set(k, []);
-  grouped.get(k).push(pr);
-});
-grouped.forEach((list, file) => {
-  console.log(`\n  ${file}`);
-  list.slice(0, 3).forEach((pr) => {
-    console.log(`    line ${pr.line}: ${pr.what}`);
-    if (pr.ctx) console.log(`      ...${pr.ctx}...`);
+if (!problems.length) {
+  console.log('  Clean: no CP1252 round-trips, no U+FFFD, no stray BOMs.');
+} else {
+  const grouped = new Map();
+  problems.forEach((pr) => {
+    if (!grouped.has(pr.file)) grouped.set(pr.file, []);
+    grouped.get(pr.file).push(pr);
   });
-  if (list.length > 3) console.log(`    +${list.length - 3} more`);
-});
-
-if (!problems.length) console.log('  All files clean: no mojibake, no replacement characters.');
+  grouped.forEach((list, file) => {
+    console.log(`\n  ${file}`);
+    list.slice(0, 3).forEach((pr) => {
+      console.log(`    line ${pr.line}: ${pr.what}`);
+      if (pr.ctx) console.log(`      ...${pr.ctx}...`);
+    });
+    if (list.length > 3) console.log(`    +${list.length - 3} more`);
+  });
+}
 process.exit(problems.length ? 1 : 0);

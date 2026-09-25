@@ -19,8 +19,8 @@ export default lucide;
 export const {
   AlertCircle, ArrowLeft, ArrowRight, BatteryCharging, Bolt, Briefcase,
   Building2, Calculator, Check, Crown, Eye, EyeOff, FileDown, FileText,
-  Fuel, Grid3X3, Grid3x3, Home, Landmark, Laptop, Lock, MapPin, Monitor,
-  MonitorIcon, Moon, Plug, Plus, Search, Settings, SettingsIcon, ShieldCheck,
-  SlidersHorizontal, Sparkles, Sun, Trash2, TrendingDown, TrendingUp, User,
-  Wallet, Wrench, X, Zap,
+  Fuel, Grid3X3, Grid3x3, Home, Landmark, Laptop, Lightbulb, Lock, MapPin,
+  Monitor, MonitorIcon, Moon, Plug, Plus, Search, Settings, SettingsIcon,
+  ShieldCheck, SlidersHorizontal, Sparkles, Sun, Trash2, TrendingDown,
+  TrendingUp, User, Wallet, Wrench, X, Zap,
 } = lucide;

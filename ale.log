@@ -1,0 +1,11 @@
+npm notice run solarquote-ng@0.2.0 check:all
+npm notice run npm run check:encoding && node scripts/smoke-check.mjs && node scripts/edge-cases.mjs && node scripts/catalog-check.mjs && node scripts/counter-check.mjs && node scripts/billing-check.mjs && node scripts/usercatalog-check.mjs && npm run check:diagnostic && npm run check:render
+npm notice run solarquote-ng@0.2.0 check:encoding
+npm notice run node scripts/encoding-audit.mjs
+Of the table content, 0.2206666667 units width could not fit page
+Of the table content, 0.2206666667 units width could not fit page
+Of the table content, 0.2206666667 units width could not fit page
+npm notice run solarquote-ng@0.2.0 check:diagnostic
+npm notice run node scripts/diagnostic-probe.mjs
+npm notice run solarquote-ng@0.2.0 check:render
+npm notice run node scripts/render-check.mjs

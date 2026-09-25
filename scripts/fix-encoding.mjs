@@ -1,17 +1,19 @@
 /**
  * Encoding repair.
  *
- * Fixes the mojibake that PowerShell Set-Content introduced: UTF-8 bytes that
- * were decoded as CP1252/Latin-1 and written back, turning the Naira sign into
- * "Ã¢â€šÂ¦", em dashes into "Ã¢â‚¬â€", and so on.
+ * Fixes the corruption PowerShell's Set-Content introduced: UTF-8 bytes that
+ * were decoded as CP1252 and written back. The Naira sign (U+20A6) and every
+ * em dash in the tree were mangled this way, so user-facing currency and
+ * spec text rendered as garbage in the UI and the exported PDF.
  *
- * The repair is a straight round-trip: mojibake text is the result of
- * encoding UTF-8 bytes as Latin-1, so decoding that Latin-1 back to bytes and
- * re-reading them as UTF-8 restores the original characters. It is applied only
- * where the result is actually valid UTF-8 and contains no replacement chars, so
- * clean files are never touched.
+ * The repair is a round trip. Mojibake is the result of decoding UTF-8 bytes as
+ * CP1252, so re-encoding that text back to its CP1252 bytes and reading those
+ * as UTF-8 restores the original characters. It is applied ONLY to maximal runs
+ * that match the round-trip signature, and only where the result decodes cleanly
+ * and actually differs, so correct characters in a mixed file are preserved.
  *
- * Also strips a UTF-8 BOM that leaked into a file's first line.
+ * Also strips a UTF-8 BOM. PowerShell's `-Encoding UTF8` writes one, and some
+ * landed inside file bodies rather than at the start.
  *
  * Usage: node scripts/fix-encoding.mjs [--check]
  */
@@ -26,14 +28,17 @@ const EXTS = new Set(['.js', '.jsx', '.mjs', '.json', '.css', '.html', '.yml']);
 /**
  * True when the text shows a CP1252 round-trip signature.
  *
- * The reliable signals are the byte pairs that decode back to a multi-byte
- * UTF-8 lead/continuation. Listing the stray Latin-1 characters themselves
- * (â, Â, Ã) is unreliable — those code points are legitimate in real text, so
- * matching them alone produced both false negatives and false positives. Only
- * the paired sequences are diagnostic.
+ * This MUST stay in step with encoding-audit.mjs. Matching the stray Latin-1
+ * characters themselves (â, Â, Ã) is unreliable — those code points are legal in
+ * real text, so that produced both misses and false positives. The structural
+ * signal is a CP1252 lead byte immediately followed by the character CP1252
+ * placed in the C1 range or the Latin-1 supplement.
  */
+const CP1252_TAIL = '\\u0080-\\u00BF\\u20AC\\u201A\\u0192\\u2122\\u0153\\u017D\\u0161\\u201E';
+const MOJIBAKE_RE = new RegExp(`[\\u00C2\\u00C3\\u00E2][${CP1252_TAIL}]`);
+
 function looksMojibake(s) {
-  return /[\u00C2\u00C3\u00E2][\u0080-\u20AC]|[\u00C3][\u00AF\u00BF]/.test(s);
+  return MOJIBAKE_RE.test(s);
 }
 
 /**
@@ -56,23 +61,71 @@ const CP1252 = (() => {
 })();
 
 /**
- * Undoes one round of UTF-8-as-Latin-1 corruption.
- * Returns null when the repair would not produce clean UTF-8.
+/**
+ * Undoes one round of UTF-8-as-CP1252 corruption, SELECTIVELY.
+ *
+ * The naive version re-encoded the WHOLE file and bailed if the result held a
+ * U+FFFD. That fails on a MIXED file: some characters are genuinely corrupt
+ * (U+00C2 U+00B7, a mis-decoded middle dot) while others are already correct (a
+ * real U+00B7 typed in the source). Re-encoding a correct U+00B7 as CP1252 gives
+ * the lone byte 0xB7, which is not valid UTF-8 alone, so the whole repair was
+ * rejected and the real corruption survived.
+ *
+ * The repair therefore applies to CORRUPT RUNS ONLY: maximal stretches matching
+ * the mojibake signature. Correct characters pass through untouched, so a file
+ * containing a valid U+00B7 keeps it.
+ *
+ * Returns null when there was nothing to repair.
  */
 function repair(text) {
-  if (!looksMojibake(text)) return null;
-  // Buffer holds the bytes of the mis-decoded text; read them as UTF-8.
-  const bytes = [];
+  if (!MOJIBAKE_RE.test(text)) return null;
+
+  // Characters CP1252 can produce in place of a multi-byte UTF-8 sequence.
+  //
+  // This must cover BOTH parts of a round trip: the lead byte (U+00C2/U+00C3/
+  // U+00E2) and the tail CP1252 relocated. Getting this wrong silently splits a
+  // corrupt run in two, so the repair lands on fragments that decode to U+FFFD
+  // and get rejected — which is exactly why an earlier version reported
+  // "repaired" while the corruption survived. The tail range is 0x80-0xBF plus
+  // the named CP1252 specials; 0xA0-0xBF (·, ¦, ²) matters as much as 0x80-0x9F,
+  // and the quote/dash family (U+201D, U+201E, U+201C) completes an em dash.
+  const isCorrupt = (ch) => {
+    const c = ch.codePointAt(0);
+    return (
+      (c >= 0xc2 && c <= 0xe2) ||
+      (c >= 0x80 && c <= 0xbf) ||
+      c === 0x20ac || c === 0x201a || c === 0x0192 || c === 0x2122 ||
+      c === 0x0153 || c === 0x017d || c === 0x0161 ||
+      c === 0x201e || c === 0x201d || c === 0x201c
+    );
+  };
+
+  const out = [];
+  let run = [];
+  let repairedAny = false;
+
+  const flush = () => {
+    if (!run.length) return;
+    const original = run.join('');
+    const bytes = run.map((ch) => CP1252.get(ch));
+    const candidate = Buffer.from(bytes).toString('utf8');
+    // Accept only if it decodes cleanly AND actually changed something.
+    if (!candidate.includes('\uFFFD') && candidate !== original) {
+      out.push(candidate);
+      repairedAny = true;
+    } else {
+      out.push(original);
+    }
+    run = [];
+  };
+
   for (const ch of text) {
-    const b = CP1252.get(ch);
-    // A char with no CP1252 byte means this is not a CP1252 mis-decode.
-    if (b === undefined) return null;
-    bytes.push(b);
+    if (isCorrupt(ch)) run.push(ch);
+    else { flush(); out.push(ch); }
   }
-  const fixed = Buffer.from(bytes).toString('utf8');
-  // A valid repair must not introduce replacement characters.
-  if (fixed.includes('\uFFFD')) return null;
-  return fixed;
+  flush();
+
+  return repairedAny ? out.join('') : null;
 }
 
 const files = [];
@@ -101,7 +154,7 @@ files.forEach((p) => {
   // repair had already turned the first one into the mojibake "ï¿¿"). Both forms
   // must go, and the removal has to happen before the CP1252 pass, because
   // U+FEFF has no CP1252 byte and would otherwise abort the whole file.
-  text = text.replace(/\uFEFF/g, '').split('ï»¿').join('').split('ï»¿').join('');
+  text = text.replace(/\uFEFF/g, '').split('').join('').split('').join('');
 
   // Repair repeatedly: some characters went through more than one round.
   for (let i = 0; i < 4; i += 1) {

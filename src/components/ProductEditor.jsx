@@ -1,5 +1,5 @@
-﻿/**
- * Product Editor â€” add or edit one of your own products
+/**
+ * Product Editor — add or edit one of your own products
  * ---------------------------------------------------------------------------
  * A single form for both create and edit. Fields change with the product kind,
  * because the sizing axis differs: a battery is specified in kWh, an inverter in
@@ -17,7 +17,7 @@ import { formatNaira } from '../utils/calculations.js';
 const FIELDS = {
   inverter: [
     { key: 'watts', label: 'Rated output (W)', type: 'number', hint: 'Continuous output, e.g. 6000' },
-    { key: 'surgeVA', label: 'Surge capacity (VA)', type: 'number', hint: 'Leave blank for 2Ã— rated' },
+    { key: 'surgeVA', label: 'Surge capacity (VA)', type: 'number', hint: 'Leave blank for 2× rated' },
     { key: 'phase', label: 'Phase', type: 'text', hint: 'Single-Phase / Three-Phase' },
     { key: 'topology', label: 'Topology', type: 'text', hint: 'Hybrid / Off-grid / String' },
   ],
@@ -128,7 +128,7 @@ export function ProductEditor({ product, onSave, onDelete, onClose }) {
           </label>
 
           <label className="block">
-            <span className="sq-label">Your price (â‚¦)</span>
+            <span className="sq-label">Your price (₦)</span>
             <input
               type="number"
               inputMode="numeric"
@@ -225,7 +225,7 @@ export function PriceEditor({ price, onSave, onReset, onClose }) {
         Reset to catalog price
       </button>
       <p className="text-[11px] text-ink-3 font-semibold">
-        Currently {formatNaira(price)} â€” overrides apply to every quote.
+        Currently {formatNaira(price)} — overrides apply to every quote.
       </p>
     </div>
   );

@@ -1,5 +1,5 @@
-﻿/**
- * LiFePO4 Battery Catalog â€” 48V rack & wall modules sold in Nigeria
+/**
+ * LiFePO4 Battery Catalog — 48V rack & wall modules sold in Nigeria
  * ---------------------------------------------------------------------------
  * Row schema (positional, expanded by `toBattery`):
  *   [model, brand, energyKWh, priceNGN, opts]
@@ -89,7 +89,7 @@ export const toBattery = ([model, brand, energyKWh, priceNGN, o], i) => ({
   kind: 'battery',
   name: model,
   brand,
-  /** Nominal energy in kWh â€” the number that sizes the bank. */
+  /** Nominal energy in kWh — the number that sizes the bank. */
   energyKWh: energyKWh,
   watts: 0, // a battery is an energy store, not a load
   indicativePriceNGN: priceNGN,

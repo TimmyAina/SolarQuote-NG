@@ -1,4 +1,4 @@
-﻿// jspdf ships a CJS build whose default export is a namespace object under Node
+// jspdf ships a CJS build whose default export is a namespace object under Node
 // ESM, so `new jsPDF()` throws. Named import gives the real constructor in both
 // Node and the Vite/browser bundle.
 import { jsPDF } from 'jspdf';
@@ -8,8 +8,8 @@ import { applyNairaFont } from '../fonts/noto-sans.js';
 
 /**
  * jsPDF's built-in fonts (helvetica etc.) only cover WinAnsi/CP-1252, which has
- * no Naira sign (U+20A6) â€” so every â‚¦ silently vanished from exported PDFs.
- * We register Noto Sans (OFL, ships the â‚¦ glyph) and use it throughout.
+ * no Naira sign (U+20A6) — so every ₦ silently vanished from exported PDFs.
+ * We register Noto Sans (OFL, ships the ₦ glyph) and use it throughout.
  * If embedding ever fails we fall back to an "NGN" prefix rather than a blank.
  */
 const PDF_FONT = 'NotoSans';
@@ -107,7 +107,7 @@ function renderBOQContent(doc, calcResult, activeTier, selectedTierIndex, settin
     ['1', `Inverter: ${calcResult.recommendedInverterKVA}kVA Hybrid Pure Sine\n${activeTier.inverterBrand} (Built-in MPPT Solar Controller)`, '1 Unit', formatNaira(activeTier.inverterCost), formatNaira(activeTier.inverterCost)],
     ['2', `Storage: ${calcResult.recommendedBatteryKWh}kWh Lithium LiFePO4\n${activeTier.batteryBrand} (${activeTier.batteryCycles})`, `${calcResult.recommendedBatteryKWh} kWh`, formatNaira(activeTier.batteryCost), formatNaira(activeTier.batteryCost)],
     ['3', `Solar PV: ${activeTier.panelBrand}\n(${activeTier.panelWatt}W x ${activeTier.panelCount} panels = ${activeTier.actualSolarKW}kWp)`, `${activeTier.panelCount} Panels`, formatNaira(Math.round(activeTier.panelCost / activeTier.panelCount)), formatNaira(activeTier.panelCost)],
-    ['4', `BOS, Aluminum Racks & Heavy DC/AC Cables\n${calcResult.technicalSafety?.recommendedDCCable || '25mmÂ² Pure Copper Flex'}, MC4s & Trunking`, 'Full Kit', formatNaira(activeTier.bosCost), formatNaira(activeTier.bosCost)],
+    ['4', `BOS, Aluminum Racks & Heavy DC/AC Cables\n${calcResult.technicalSafety?.recommendedDCCable || '25mm² Pure Copper Flex'}, MC4s & Trunking`, 'Full Kit', formatNaira(activeTier.bosCost), formatNaira(activeTier.bosCost)],
     ['5', `Safety DB & Protection Distribution Kit\n${calcResult.technicalSafety?.recommendedDCBreaker || '125A DC Isolator'}, AC/DC SPD & Changeover`, '1 Kit', formatNaira(activeTier.protectionCost), formatNaira(activeTier.protectionCost)],
     ['6', `Certified Engineering Installation & Commissioning\nEarth pit & rod, AC phase balancing, load testing & 1-year free audit`, 'Turnkey', formatNaira(activeTier.installationFee), formatNaira(activeTier.installationFee)]
   ];
@@ -132,7 +132,7 @@ function renderBOQContent(doc, calcResult, activeTier, selectedTierIndex, settin
 
   const m = activeTier.milestones || { phase1: Math.round(activeTier.totalCost * 0.7), phase2: Math.round(activeTier.totalCost * 0.2), phase3: Math.round(activeTier.totalCost * 0.1) };
   const milestoneRows = [
-    ['Phase 1: 70% Mobilization & Equipment Sourcing', formatNaira(m.phase1), docType === 'receipt' ? 'PAID / SETTLED âœ“' : 'Due upon contract agreement'],
+    ['Phase 1: 70% Mobilization & Equipment Sourcing', formatNaira(m.phase1), docType === 'receipt' ? 'PAID / SETTLED ✓' : 'Due upon contract agreement'],
     ['Phase 2: 20% Mounting & Inverter Setup', formatNaira(m.phase2), 'Due on equipment site arrival'],
     ['Phase 3: 10% Testing & Final Commissioning', formatNaira(m.phase3), 'Due after 24h successful load run']
   ];
@@ -154,9 +154,9 @@ function renderBOQContent(doc, calcResult, activeTier, selectedTierIndex, settin
   doc.setFont(PDF_FONT, 'normal');
   doc.setFontSize(6);
   doc.setTextColor(100, 116, 139);
-  doc.text("â€¢ Quotation Validity: 14 days from issuance date. Subject to market foreign exchange parity.", 14, footerY + 4);
-  doc.text(`â€¢ Technical Safety: ${calcResult.technicalSafety?.recommendedDCCable || '25mmÂ² Flex'} with ${calcResult.technicalSafety?.recommendedDCBreaker || '125A DC Isolator'} protection.`, 14, footerY + 8);
-  doc.text(`â€¢ Roof Footprint: Requires ~${activeTier.roofSpecs?.areaM2 || 24}mÂ² roof space (~${activeTier.roofSpecs?.weightKg || 280}kg dead load). Face South (15Â° tilt).`, 14, footerY + 12);
+  doc.text("• Quotation Validity: 14 days from issuance date. Subject to market foreign exchange parity.", 14, footerY + 4);
+  doc.text(`• Technical Safety: ${calcResult.technicalSafety?.recommendedDCCable || '25mm² Flex'} with ${calcResult.technicalSafety?.recommendedDCBreaker || '125A DC Isolator'} protection.`, 14, footerY + 8);
+  doc.text(`• Roof Footprint: Requires ~${activeTier.roofSpecs?.areaM2 || 24}m² roof space (~${activeTier.roofSpecs?.weightKg || 280}kg dead load). Face South (15° tilt).`, 14, footerY + 12);
 
   // Signature Block
   if (signatureBase64) {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Catalog + Energy Cost verification
  * ---------------------------------------------------------------------------
  * Guards the four requirements that are easy to regress:
@@ -111,7 +111,7 @@ console.log('\n[E1] Nigerian energy price data');
 check('5 NERC bands present', GRID_BANDS.length === 5);
 check('11 DisCos present', DISCOS.length === 11);
 check(
-  'petrol default is realistic (â‚¦1000â€“â‚¦1500)',
+  'petrol default is realistic (₦1000–₦1500)',
   GRID_BANDS.length === 5
 );
 
@@ -124,7 +124,7 @@ const base = {
   generatorFuelType: 'diesel',
 };
 const bandA = calculateRunningCosts({ dailyKWh: 10, genKVA: 5, settings: base });
-console.log(`    Band A: â‚¦${bandA.monthlyTotal.toLocaleString()}/mo, â‚¦${bandA.effectiveCostPerKWh}/kWh effective`);
+console.log(`    Band A: ₦${bandA.monthlyTotal.toLocaleString()}/mo, ₦${bandA.effectiveCostPerKWh}/kWh effective`);
 check('Band A monthly cost is positive', bandA.monthlyTotal > 0);
 check(
   'effective cost EXCEEDS the grid tariff (generator is real)',
@@ -137,7 +137,7 @@ const bandE = calculateRunningCosts({
   genKVA: 5,
   settings: { ...base, discoTariffPerKWh: 40, gridHoursPerDay: 6 },
 });
-console.log(`    Band E: â‚¦${bandE.monthlyTotal.toLocaleString()}/mo`);
+console.log(`    Band E: ₦${bandE.monthlyTotal.toLocaleString()}/mo`);
 check(
   'low-tariff band still costs MORE in practice',
   bandE.monthlyTotal > bandA.monthlyTotal,

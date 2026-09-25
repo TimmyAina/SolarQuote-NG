@@ -1,13 +1,13 @@
 /**
- * User Catalog â€” price overrides and self-added products
+ * User Catalog — price overrides and self-added products
  * ---------------------------------------------------------------------------
  * Two capabilities, deliberately kept in one pure store so they compose:
  *
- *   1. PRICE OVERRIDES â€” the bundled catalog ships indicative street prices.
+ *   1. PRICE OVERRIDES — the bundled catalog ships indicative street prices.
  *      Installers quote from their own supplier, so any product's price can be
  *      overridden. An override never mutates the shipped dataset; it is applied
  *      on read via `effectivePrice()`.
- *   2. CUSTOM PRODUCTS â€” installers stock hardware we do not list (grey imports,
+ *   2. CUSTOM PRODUCTS — installers stock hardware we do not list (grey imports,
  *      supplier-specific models). They can add their own inverters, batteries,
  *      panels and loads, which then behave exactly like catalog products.
  *
@@ -74,7 +74,7 @@ export function setPrice(state, productId, price) {
   if (!productId) return { ok: false, state, error: 'Missing product.' };
   const value = Number(price);
   if (!Number.isFinite(value) || value <= 0) {
-    return { ok: false, state, error: 'Enter a price above â‚¦0.' };
+    return { ok: false, state, error: 'Enter a price above ₦0.' };
   }
   if (value > MAX_PRICE) {
     return { ok: false, state, error: 'That price looks too large. Check the digits.' };
@@ -127,7 +127,7 @@ export function normaliseCustomProduct(input, { seq = 0 } = {}) {
   // would silently drop every product it had just written.
   const price = Number(input.priceNGN ?? input.indicativePriceNGN);
   if (!Number.isFinite(price) || price <= 0) {
-    return { ok: false, error: 'Enter a price above â‚¦0.' };
+    return { ok: false, error: 'Enter a price above ₦0.' };
   }
   if (price > MAX_PRICE) return { ok: false, error: 'That price looks too large.' };
 
@@ -252,7 +252,7 @@ export function withEffectivePrices(products, state) {
 }
 
 /**
- * Parses stored JSON defensively â€” a corrupt payload must never brick the app.
+ * Parses stored JSON defensively — a corrupt payload must never brick the app.
  * Anything that fails validation is dropped rather than surfaced.
  */
 export function hydrateUserCatalog(raw) {

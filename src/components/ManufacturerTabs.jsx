@@ -40,8 +40,10 @@ export function ManufacturerTabs({ products, kind, selected, onSelect }) {
   if (groups.length <= 1) return null;
 
   const tabs = [
-    { key: ALL_GROUPS, label: 'All', count: total, all: true },
-    ...groups,
+    { key: ALL_GROUPS, name: ALL_GROUPS, label: 'All', count: total, all: true },
+    // groupingFor() emits `name`; alias it to `key` so every tab has a stable
+    // React key. Category groups and brand groups both rely on `name`.
+    ...groups.map((g) => ({ ...g, key: g.name })),
   ];
   const axis = groups[0].isCategory ? 'category' : 'manufacturer';
 

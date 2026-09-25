@@ -1,5 +1,5 @@
-﻿/**
- * Solar PV Panel Catalog â€” modules available in the Nigerian market
+/**
+ * Solar PV Panel Catalog — modules available in the Nigerian market
  * ---------------------------------------------------------------------------
  * A panel GENERATES power rather than consuming it, so `watts` here is rated
  * nameplate output (Wp). The engine uses it to size array count against the
@@ -98,7 +98,7 @@ export const toPanel = ([model, brand, wattage, priceNGN, o], i) => ({
   kind: 'panel',
   name: model,
   brand,
-  /** Rated nameplate output in watts peak â€” generation, not consumption. */
+  /** Rated nameplate output in watts peak — generation, not consumption. */
   watts: wattage,
   indicativePriceNGN: priceNGN,
   specs: {

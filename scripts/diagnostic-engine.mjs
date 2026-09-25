@@ -1,5 +1,5 @@
-﻿/**
- * Full-app diagnostic probe â€” part 2: engine, money, gates, search, assets.
+/**
+ * Full-app diagnostic probe — part 2: engine, money, gates, search, assets.
  *
  * Split from part 1 to keep each file a sane size; behaviourally the split is
  * the same: this probes the runtime subsystems, not the static data graph.
@@ -33,7 +33,7 @@ const sizing = (appliances, sunHours = 5, markup = 15) =>
   try {
     const r = sizing(appliances);
     [r.totalDailyKWh, r.recommendedInverterKVA, r.recommendedBatteryKWh,
-      r.recommendedSolarKW, r.inverterPeakSurgeVA].forEach((n, i) => {
+      r.recommendedSolarKW, r.totalPeakWatts, r.inductiveSurgeWatts].forEach((n, i) => {
       if (!fin(n)) add('CRIT', 'sizing', `"${name}" field[${i}] = ${n}`);
     });
     if (r.totalDailyKWh < 0) add('HIGH', 'sizing', `"${name}" negative daily total`);
@@ -65,7 +65,15 @@ const sizing = (appliances, sunHours = 5, markup = 15) =>
 [null, undefined, {}, { equipment: null }, 'nonsense', 42, []].forEach((s, i) => {
   try {
     const norm = normalizeSettings(s);
-    if (!norm || !norm.equipment) add('CRIT', 'settings', `normalizeSettings(${i}) produced no equipment`);
+    if (!norm || !norm.equipment || !norm.equipment.inverters) {
+      add('CRIT', 'settings', `normalizeSettings(${i}) lost the equipment block`);
+    } else {
+      // A payload that survives normalisation must also still size a system.
+      try {
+        const r = sizing([{ id: 'f', qty: 4, watts: 75, hoursDay: 8, hoursNight: 6 }]);
+        if (!fin(r.tiers[1].totalCost)) add('CRIT', 'settings', `normalizeSettings(${i}) -> non-finite quote`);
+      } catch (e) { add('CRIT', 'settings', `normalizeSettings(${i}) + calculate THREW: ${e.message}`); }
+    }
   } catch (e) { add('CRIT', 'settings', `normalizeSettings(${i}) THREW: ${e.message}`); }
 });
 

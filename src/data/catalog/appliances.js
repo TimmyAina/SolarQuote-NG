@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Household & Commercial Appliance Catalog
  * ---------------------------------------------------------------------------
  * The everyday loads that dominate a Nigerian home, office or SME.

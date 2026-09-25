@@ -1,4 +1,4 @@
-﻿/**
+/**
  * BOQ Screen
  * ---------------------------------------------------------------------------
  * Turns the sizing result into something a client can sign, and contrasts the
@@ -99,9 +99,9 @@ export function BOQScreen({
 
 
   const boqItems = [
-    { title: 'Solar PV Array', desc: `${tier.panelWatt} W panels Â· ${tier.panelCount} units`, cost: tier.panelCost },
+    { title: 'Solar PV Array', desc: `${tier.panelWatt} W panels · ${tier.panelCount} units`, cost: tier.panelCost },
     { title: 'Hybrid Inverter', desc: tier.inverterBrand, cost: tier.inverterCost },
-    { title: 'LiFePOâ‚„ Battery Bank', desc: `${tier.batteryBrand} Â· ${tier.batteryCycles}`, cost: tier.batteryCost },
+    { title: 'LiFePO₄ Battery Bank', desc: `${tier.batteryBrand} · ${tier.batteryCycles}`, cost: tier.batteryCost },
     { title: 'Balance of System', desc: 'Cabling, breakers, surge protection, enclosures', cost: tier.bosCost + tier.protectionCost },
     { title: 'Installation & Logistics', desc: 'Certified labour and commissioning', cost: tier.installationFee },
   ];
@@ -109,7 +109,7 @@ export function BOQScreen({
 
   return (
     <div className="space-y-5 pb-28">
-      {/* Quote header â€” numbering starts at zero */}
+      {/* Quote header — numbering starts at zero */}
       <section className="sq-card p-4 flex items-center justify-between">
         <div>
           <p className="sq-label">Quote</p>
@@ -330,7 +330,7 @@ export function BOQScreen({
               ['Battery breaker', calcResult.technicalSafety?.recommendedDCBreaker],
               ['AC surge', calcResult.technicalSafety?.recommendedACSurge],
               ['DC surge', calcResult.technicalSafety?.recommendedDCSurge],
-              ['Roof area', `${tier.roofSpecs?.areaM2} mÂ²`],
+              ['Roof area', `${tier.roofSpecs?.areaM2} m²`],
               ['Panel load', `${tier.roofSpecs?.weightKg} kg`],
             ].map(([k, v]) => (
               <div key={k} className="p-2.5 rounded-xl bg-surface-2">

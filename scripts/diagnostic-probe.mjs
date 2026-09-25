@@ -1,5 +1,5 @@
-﻿/**
- * Full-app diagnostic probe â€” part 1: data integrity across every subsystem.
+/**
+ * Full-app diagnostic probe — part 1: data integrity across every subsystem.
  *
  * Phase 1 (root cause investigation) instrumentation. The existing suites assert
  * what someone already thought to test; this looks for invariant violations they
