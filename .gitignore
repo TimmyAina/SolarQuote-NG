@@ -19,3 +19,4 @@ android/captures/
 # Source TTF for the embedded PDF font. The generated src/fonts/noto-sans.js is
 # committed (it is what the app imports); the raw binary is not needed to build.
 .tmp-font.bin
+.tmp-apk/
