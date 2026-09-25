@@ -1,5 +1,15 @@
 /**
- * SolarQuote NG — Design System (UI/UX Pro Max: "Trust & Authority")
+ * SolarQuote NG — Design System
+ * ---------------------------------------------------------------------------
+ * Generated from the UI/UX Pro Max design system for a Nigerian solar-installer
+ * quotation tool (domain search: "solar energy quotation tool, mobile, data
+ * dense catalog, trust and money", density 7/10):
+ *
+ *   Style      Organic Biophilic — nature, green, rounded, sustainable
+ *   Palette    emerald #059669 primary, #ECFDF5 canvas, #064E3B ink
+ *   Type       Fira Sans body, Fira Code for figures and technical values
+ *   Radius     16-24px
+ *
  * Token-driven theming: every surface reads from a CSS variable, so light and
  * dark are ONE component tree, never two hardcoded hex palettes.
  */
@@ -9,24 +19,25 @@
 
 @layer base {
   :root {
-    --sq-primary: #0f172a;
+    /* Primary / accent — emerald, the "solar + sustainable + money" green */
+    --sq-primary: #064e3b;
     --sq-primary-fg: #ffffff;
-    --sq-accent: #0369a1;
+    --sq-accent: #059669;
     --sq-accent-fg: #ffffff;
     --sq-sun: #d97706;
 
-    --sq-canvas: #f8fafc;
+    --sq-canvas: #f2fbf7;
     --sq-surface: #ffffff;
-    --sq-surface-2: #f1f5f9;
-    --sq-surface-3: #e8ecf1;
-    --sq-line: #e2e8f0;
-    --sq-line-strong: #cbd5e1;
+    --sq-surface-2: #ecfdf5;
+    --sq-surface-3: #d1fae5;
+    --sq-line: #d3e8dd;
+    --sq-line-strong: #a7d8c3;
 
-    --sq-ink: #020617;
-    --sq-ink-2: #334155;
-    --sq-ink-3: #64748b;
+    --sq-ink: #052e24;
+    --sq-ink-2: #2f5d50;
+    --sq-ink-3: #5b8577;
 
-    --sq-accent-soft: #e0f2fe;
+    --sq-accent-soft: #d1fae5;
     --sq-ok: #047857;
     --sq-ok-soft: #d1fae5;
     --sq-warn: #b45309;
@@ -34,34 +45,39 @@
     --sq-danger: #dc2626;
     --sq-danger-soft: #fee2e2;
 
-    --sq-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
-    --sq-shadow-lg: 0 2px 4px rgba(15, 23, 42, 0.05), 0 20px 48px -20px rgba(15, 23, 42, 0.28);
-    --sq-scrim: rgba(2, 6, 23, 0.5);
+    --sq-shadow: 0 1px 2px rgba(6, 78, 59, 0.06), 0 8px 24px -12px rgba(6, 78, 59, 0.18);
+    --sq-shadow-lg: 0 2px 4px rgba(6, 78, 59, 0.05), 0 20px 48px -20px rgba(6, 78, 59, 0.28);
+    --sq-scrim: rgba(5, 46, 36, 0.5);
+
+    /* 16-24px radius scale per the Organic Biomorphic style */
+    --sq-radius: 20px;
+    --sq-radius-lg: 24px;
+    --sq-radius-sm: 12px;
 
     color-scheme: light;
   }
 
   .dark {
-    --sq-primary: #0b1220;
-    --sq-primary-fg: #f8fafc;
-    --sq-accent: #0ea5e9;
-    --sq-accent-fg: #04121f;
+    --sq-primary: #041f19;
+    --sq-primary-fg: #ecfdf5;
+    --sq-accent: #34d399;
+    --sq-accent-fg: #052e24;
     --sq-sun: #fbbf24;
 
-    --sq-canvas: #070c16;
-    --sq-surface: #101a2c;
-    --sq-surface-2: #17233a;
-    --sq-surface-3: #1e2d47;
-    --sq-line: #22304a;
-    --sq-line-strong: #33456180;
+    --sq-canvas: #04120e;
+    --sq-surface: #0a1f19;
+    --sq-surface-2: #102c23;
+    --sq-surface-3: #163b2f;
+    --sq-line: #1c4638;
+    --sq-line-strong: #2a5c4a;
 
-    --sq-ink: #f1f5f9;
-    --sq-ink-2: #b6c4d6;
-    --sq-ink-3: #8598b0;
+    --sq-ink: #e8f5ef;
+    --sq-ink-2: #a9cec0;
+    --sq-ink-3: #7ba697;
 
-    --sq-accent-soft: #08243a;
+    --sq-accent-soft: #0c3527;
     --sq-ok: #34d399;
-    --sq-ok-soft: #062b23;
+    --sq-ok-soft: #0a2e22;
     --sq-warn: #fbbf24;
     --sq-warn-soft: #2e2308;
     --sq-danger: #f87171;
@@ -69,7 +85,7 @@
 
     --sq-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
     --sq-shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.4), 0 20px 48px -20px rgba(0, 0, 0, 0.85);
-    --sq-scrim: rgba(2, 6, 23, 0.68);
+    --sq-scrim: rgba(0, 10, 7, 0.68);
 
     color-scheme: dark;
   }
@@ -81,11 +97,11 @@
   }
 
   body {
-    /* Plus Jakarta Sans has no Naira glyph, so ₦ falls through to the next
-       family. Noto Sans / Segoe UI Symbol guarantee a U+20A6 provider on
-       every platform, otherwise currency renders as a blank box. */
-    font-family: 'Plus Jakarta Sans', 'Noto Sans', 'Segoe UI Symbol', 'Segoe UI',
-      system-ui, -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    /* Fira Sans per the design system. Neither Fira Sans nor Plus Jakarta Sans
+       has a Naira glyph, so Noto Sans / Segoe UI Symbol follow to guarantee a
+       U+20A6 provider on every platform — otherwise currency renders blank. */
+    font-family: 'Fira Sans', 'Noto Sans', 'Segoe UI Symbol', system-ui, -apple-system,
+      BlinkMacSystemFont, Roboto, Arial, sans-serif;
     background-color: var(--sq-canvas);
     color: var(--sq-ink);
     -webkit-tap-highlight-color: transparent;
@@ -93,10 +109,20 @@
     overscroll-behavior-y: none;
   }
 
-  /* Numeric data must never reflow while typing or animating */
+  /* Numeric data must never reflow while typing or animating, and figures get
+     the Fira Code treatment the design system specifies. */
   .tnum {
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1;
+  }
+
+  /* Hide a horizontal scrollbar without disabling the scroll itself. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 
   input[type='number']::-webkit-outer-spin-button,

@@ -23,6 +23,7 @@ import { LAPTOPS, LAPTOP_BRANDS } from './laptops.js';
 import { DESKTOPS, DESKTOP_BRANDS } from './desktops.js';
 import { PANELS, PANEL_BRANDS } from './panels.js';
 import { APPLIANCES, APPLIANCE_CATEGORIES } from './appliances.js';
+import { PARTS } from '../parts.js';
 import { effectivePrice } from '../userCatalog.js';
 
 /** The six top-level catalog sections, in the order installers browse them. */
@@ -75,6 +76,14 @@ export const CATALOG_SECTIONS = [
     blurb: 'Everyday household, commercial and medical load you quote daily.',
     count: APPLIANCES.length,
   },
+  {
+    id: 'part',
+    label: 'Parts & Spares',
+    shortLabel: 'Parts',
+    icon: 'Wrench',
+    blurb: 'Cable, MC4, breakers, isolators, racking and consumables — the kit a job consumes.',
+    count: PARTS.length,
+  },
 ];
 
 /** Section metadata with the user's own products counted in. */
@@ -111,6 +120,7 @@ export const ALL_PRODUCTS = [
   ...LAPTOPS,
   ...DESKTOPS,
   ...APPLIANCES,
+  ...PARTS,
 ];
 
 export const ALL_BRANDS = [
@@ -128,9 +138,13 @@ export const EVERY_BRANDS = [
 
 export const TOTAL_PRODUCT_COUNT = ALL_PRODUCTS.length;
 
-/** Products that consume power, i.e. everything except panels and batteries. */
+/**
+ * Products that consume power, i.e. everything except panels, batteries and
+ * parts. Parts are inventory the job consumes; they have no load draw and must
+ * never reach the sizing engine.
+ */
 export const LOAD_PRODUCTS = ALL_PRODUCTS.filter(
-  (p) => p.kind !== 'panel' && p.kind !== 'battery'
+  (p) => p.kind !== 'panel' && p.kind !== 'battery' && p.kind !== 'part'
 );
 
 /** Normalised wattage for search/sort; batteries use their discharge power. */
@@ -141,6 +155,8 @@ export function searchableWatts(p) {
 
 /** Human-readable power figure, honest about what the number represents. */
 export function powerLabel(p) {
+  // A part has no load draw; show what it actually is instead of "0 W".
+  if (p.kind === 'part') return p.unit || 'per unit';
   if (p.kind === 'battery') {
     return `${p.energyKWh} kWh`;
   }
@@ -169,6 +185,7 @@ export const CATEGORY_LABELS = {
   laptop: 'Laptops',
   desktop: 'Desktops',
   appliance: 'Appliances',
+  part: 'Parts & Spares',
 };
 
 /**

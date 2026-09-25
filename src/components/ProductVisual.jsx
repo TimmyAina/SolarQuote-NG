@@ -11,7 +11,7 @@
  * on a catalog row.
  */
 import React from 'react';
-import { Zap, BatteryCharging, Sun, Laptop, Monitor, Plug } from 'lucide-react';
+import { Zap, BatteryCharging, Sun, Laptop, Monitor, Plug, Wrench } from 'lucide-react';
 
 const GLYPH = {
   inverter: Zap,
@@ -20,6 +20,7 @@ const GLYPH = {
   laptop: Laptop,
   desktop: Monitor,
   appliance: Plug,
+  part: Wrench,
 };
 
 /** Stable hue per brand so the same brand always gets the same tile colour. */

@@ -7,7 +7,7 @@
  */
 import React, { useEffect } from 'react';
 import {
-  X, Plus, Check, Lock, SlidersHorizontal, Zap, BatteryCharging, Sun, Laptop, Monitor, Plug,
+  X, Plus, Check, Lock, SlidersHorizontal, Zap, BatteryCharging, Sun, Laptop, Monitor, Plug, Wrench,
 } from 'lucide-react';
 import { PriceEditor } from './ProductEditor.jsx';
 import { powerLabel, CATEGORY_LABELS } from '../data/catalog/index.js';
@@ -17,6 +17,7 @@ import { ProductVisual } from './ProductVisual.jsx';
 const ICONS = {
   inverter: Zap, battery: BatteryCharging, panel: Sun,
   laptop: Laptop, desktop: Monitor, appliance: Plug,
+  part: Wrench,
 };
 
 /** Technical spec rows, per product kind. */

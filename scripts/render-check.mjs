@@ -218,6 +218,12 @@ check(
   'add-your-own entry point present',
   /add your own product/i.test(cat) || /upgrade/i.test(cat)
 );
+// The producer tab bar is the grouping axis: a section with several makers
+// must render manufacturer tabs, not just a dropdown.
+check('manufacturer tabs render', /tablist|Filter by manufacturer/i.test(document.body.innerHTML));
+check('a real brand tab is shown', /Deye|Sunsynk|Growatt|Victron|Pylontech|LONGi/i.test(cat));
+check('brand artwork or wordmark is used', document.querySelectorAll('[role="img"]').length > 0);
+check('parts section is reachable', /Parts/i.test(cat) || /parts/i.test(cat));
 check('no React errors on catalog', errors.length === 0, errors[0] || 'none');
 
 console.error = origError;

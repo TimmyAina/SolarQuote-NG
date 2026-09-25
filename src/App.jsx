@@ -72,6 +72,10 @@ function Shell() {
 
   /** Adds a catalog product to the quote as a load line, or bumps its count. */
   const addLoad = useCallback((product) => {
+    // Parts are inventory the job consumes, not electrical load. Adding one to
+    // the load list would feed watts: 0 into the sizing engine and silently
+    // change nothing, so it is refused explicitly rather than mis-added.
+    if (product.kind === 'part') return false;
     setAppliances((prev) => {
       if (prev.some((a) => a.id === product.id)) {
         return prev.map((a) =>

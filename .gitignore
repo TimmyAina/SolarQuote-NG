@@ -19,4 +19,8 @@ android/captures/
 # Source TTF for the embedded PDF font. The generated src/fonts/noto-sans.js is
 # committed (it is what the app imports); the raw binary is not needed to build.
 .tmp-font.bin
+
+# Output of scripts/fetch-brand-logos.mjs. The logos themselves in public/brands/
+# ARE committed; only this intermediate manifest is machine state.
+.tmp-logo-manifest.json
 .tmp-apk/

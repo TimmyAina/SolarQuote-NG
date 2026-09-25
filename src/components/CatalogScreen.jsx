@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Catalog Screen
  * ---------------------------------------------------------------------------
  * Browsable, searchable reference across all six product families. Tapping a
@@ -11,7 +11,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Search, X, SlidersHorizontal, Zap, BatteryCharging,
-  Sun, Laptop, Monitor, Plug, Plus, Lock,
+  Sun, Laptop, Monitor, Plug, Wrench, Plus, Lock,
 } from 'lucide-react';
 import {
   CATALOG_SECTIONS, searchCatalog, powerLabel, mergeUserCatalog, applyPriceOverrides,
@@ -19,11 +19,14 @@ import {
 import { ProductVisual } from './ProductVisual.jsx';
 import { ProductDetail } from './ProductDetail.jsx';
 import { ProductEditor } from './ProductEditor.jsx';
+import { ManufacturerTabs } from './ManufacturerTabs.jsx';
+import { BrandMark } from './BrandMark.jsx';
 import { useApp } from '../context/AppContext.jsx';
 
 const ICONS = {
   inverter: Zap, battery: BatteryCharging, panel: Sun,
   laptop: Laptop, desktop: Monitor, appliance: Plug,
+  part: Wrench,
 };
 
 const ALL = 'all';
@@ -68,13 +71,20 @@ export function CatalogScreen({ isSimple, onAddLoad, onLockedAdd, currentLoads =
 
   const activeFilterCount = (section !== ALL ? 1 : 0) + (brand ? 1 : 0);
 
+  // Manufacturer tabs count the section's own products, not the search results,
+  // so the numbers stay stable while the installer types a query.
+  const sectionProducts = useMemo(
+    () => products.filter((p) => section === ALL || p.kind === section),
+    [products, section]
+  );
+
   return (
     <div className="pb-28">
       <CatalogFilters
         query={query}
         setQuery={setQuery}
         section={section}
-        setSection={setSection}
+        setSection={(s) => { setSection(s); setBrand(null); }}
         brand={brand}
         setBrand={setBrand}
         showBrands={showBrands}
@@ -83,6 +93,16 @@ export function CatalogScreen({ isSimple, onAddLoad, onLockedAdd, currentLoads =
         resultCount={filtered.length}
         activeFilterCount={activeFilterCount}
       />
+
+      {/* Producer tabs: group a section by who makes the product */}
+      <div className="px-4 pb-3">
+        <ManufacturerTabs
+          products={sectionProducts}
+          kind={section === ALL ? null : section}
+          selected={brand}
+          onSelect={setBrand}
+        />
+      </div>
 
       {/* Add your own hardware — a paid capability */}
       <div className="px-4 pb-3">
@@ -277,13 +297,22 @@ function ProductGrid({ products, onSelect, total }) {
               key={p.id}
               type="button"
               onClick={() => onSelect(p)}
-              className="sq-card overflow-hidden text-left hover:shadow-lift transition-shadow active:scale-[0.99]"
+              className="sq-card overflow-hidden text-left hover:shadow-lift transition-shadow active:scale-[0.99] relative"
             >
               <div className="h-24 w-full">
                 <ProductVisual product={p} />
               </div>
+              {/* Manufacturer mark, so the producer is identifiable on the card */}
+              <span className="absolute top-1.5 left-1.5">
+                <BrandMark brand={p.brand} size="xs" className="shadow-sm ring-1 ring-black/5" />
+              </span>
+              {p.custom && (
+                <span className="absolute top-1.5 right-1.5 text-[9px] font-extrabold uppercase tracking-wide text-white bg-accent px-1.5 py-0.5 rounded-md">
+                  Yours
+                </span>
+              )}
               <div className="p-2.5">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-accent">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-accent truncate">
                   {p.brand}
                 </p>
                 <p className="text-xs font-bold text-ink leading-tight mt-0.5 line-clamp-2">
