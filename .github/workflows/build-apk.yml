@@ -1,0 +1,79 @@
+name: Build & Release SolarQuote NG Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Build Web Production Bundle
+        run: npm run build
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Sync Capacitor Android Project
+        run: npx cap sync android
+
+      - name: Grant Execute Permission to Gradle Wrapper
+        working-directory: android
+        run: chmod +x gradlew
+
+      - name: Build Android Release APK
+        working-directory: android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SolarQuote-NG-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Create GitHub Release (On Main Branch Push)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: SolarQuote NG Release v1.0.${{ github.run_number }}
+          body: |
+            ## SolarQuote NG — Production Android APK Release ⚡
+            - **App Version**: 1.0.${{ github.run_number }}
+            - **Target**: Android 14+ (ARM64 & x86_64)
+            - **Features Included**:
+              - Instant 30-second solar sizing (Fans, Bulbs, AC, Freezer, Pumping machine)
+              - 3 Equipment Quality Tiers (Economy, Standard, Premium)
+              - Monthly fuel avoidance and NEPA cost payback engine
+              - High-resolution branded PDF Bill of Quantities (BOQ) with installer phone & credentials
+              - Paystack paywall simulation (₦2,000 / BOQ unlock)
+              - Admin panel for real-time equipment pricing updates
+          files: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
