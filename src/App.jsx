@@ -1,9 +1,10 @@
-﻿import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Sun, Moon, ArrowLeft, User, Wrench } from 'lucide-react';
 
 import { AppProvider, useApp } from './context/AppContext.jsx';
 import { calculateSolarSystem } from './utils/calculations.js';
 import { calculateRunningCosts } from './utils/energyCosts.js';
+import { buildPresetLoads, DEFAULT_PRESET_ID } from './utils/presets.js';
 import { PROFILE_PRESETS, NIGERIAN_CITIES } from './data/pricingDefaults.js';
 
 import { WelcomeScreen } from './components/WelcomeScreen.jsx';
@@ -37,10 +38,10 @@ function Shell() {
   const [selectedTierIndex, setSelectedTierIndex] = useState(1);
   const [installerMarkup, setInstallerMarkup] = useState(15);
 
-  const [appliances, setAppliances] = useState(() =>
-    // suggestedAppliances is a { id: qty } map, not an array.
-    Object.entries(PROFILE_PRESETS[0].suggestedAppliances).map(([id, qty]) => ({ id, qty }))
-  );
+  // Preset loads must be resolved through buildPresetLoads(), which snapshots
+  // each product's wattage. Building a bare {id, qty} here would hand the
+  // sizing engine a zero load and the app would under-size every quote.
+  const [appliances, setAppliances] = useState(() => buildPresetLoads(DEFAULT_PRESET_ID));
 
   const calcResult = useMemo(
     () =>
@@ -102,10 +103,7 @@ function Shell() {
     const preset = PROFILE_PRESETS.find((p) => p.id === presetId);
     if (!preset) return;
     setSelectedPreset(presetId);
-    // suggestedAppliances is a { id: qty } map, not an array.
-    setAppliances(
-      Object.entries(preset.suggestedAppliances).map(([id, qty]) => ({ id, qty }))
-    );
+    setAppliances(buildPresetLoads(presetId));
   }, []);
 
   // Adding catalog hardware to a quote is a paid capability.

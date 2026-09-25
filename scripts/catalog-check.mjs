@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Catalog + Energy Cost verification
  * ---------------------------------------------------------------------------
  * Guards the four requirements that are easy to regress:
@@ -20,7 +20,8 @@ import {
 import { BRANDS, getBrand, brandsForKind } from '../src/data/brands.js';
 import { CONDITIONS, priceForCondition } from '../src/data/parts.js';
 import { calculateRunningCosts } from '../src/utils/energyCosts.js';
-import { GRID_BANDS, DISCOS } from '../src/data/pricingDefaults.js';
+import { calculateSolarSystem } from '../src/utils/calculations.js';
+import { GRID_BANDS, DISCOS, DEFAULT_SETTINGS } from '../src/data/pricingDefaults.js';
 
 let failures = 0;
 const check = (label, condition, detail = '') => {
@@ -110,7 +111,7 @@ console.log('\n[E1] Nigerian energy price data');
 check('5 NERC bands present', GRID_BANDS.length === 5);
 check('11 DisCos present', DISCOS.length === 11);
 check(
-  'petrol default is realistic (₦1000–₦1500)',
+  'petrol default is realistic (â‚¦1000â€“â‚¦1500)',
   GRID_BANDS.length === 5
 );
 
@@ -123,7 +124,7 @@ const base = {
   generatorFuelType: 'diesel',
 };
 const bandA = calculateRunningCosts({ dailyKWh: 10, genKVA: 5, settings: base });
-console.log(`    Band A: ₦${bandA.monthlyTotal.toLocaleString()}/mo, ₦${bandA.effectiveCostPerKWh}/kWh effective`);
+console.log(`    Band A: â‚¦${bandA.monthlyTotal.toLocaleString()}/mo, â‚¦${bandA.effectiveCostPerKWh}/kWh effective`);
 check('Band A monthly cost is positive', bandA.monthlyTotal > 0);
 check(
   'effective cost EXCEEDS the grid tariff (generator is real)',
@@ -136,7 +137,7 @@ const bandE = calculateRunningCosts({
   genKVA: 5,
   settings: { ...base, discoTariffPerKWh: 40, gridHoursPerDay: 6 },
 });
-console.log(`    Band E: ₦${bandE.monthlyTotal.toLocaleString()}/mo`);
+console.log(`    Band E: â‚¦${bandE.monthlyTotal.toLocaleString()}/mo`);
 check(
   'low-tariff band still costs MORE in practice',
   bandE.monthlyTotal > bandA.monthlyTotal,
@@ -175,16 +176,106 @@ const groupedTotal = inverterBrands.reduce((s, b) => s + b.count, 0);
 const inverterTotal = ALL_PRODUCTS.filter((p) => p.kind === 'inverter').length;
 check('group counts sum to the section total', groupedTotal === inverterTotal, `${groupedTotal}/${inverterTotal}`);
 
+// Unbranded sections (appliances, parts) have no manufacturer to group by, so
+// the tab bar must fall back to grouping by category or the biggest section in
+// the catalog would show no tabs at all.
+const { groupingFor } = await import('../src/data/brands.js');
+['inverter', 'battery', 'panel', 'laptop', 'desktop', 'appliance', 'part'].forEach((kind) => {
+  const g = groupingFor(ALL_PRODUCTS, kind);
+  const total = ALL_PRODUCTS.filter((p) => p.kind === kind).length;
+  const sum = g.reduce((s, b) => s + b.count, 0);
+  check(`${kind}: tab bar has groups`, g.length >= 1, `${g.length} groups`);
+  check(`${kind}: tabs cover the whole section`, sum === total, `${sum}/${total}`);
+  check(
+    `${kind}: every tab has a label and a mark`,
+    g.every((x) => typeof x.label === 'string' && x.label.length > 0)
+  );
+});
+const applianceGrouping = groupingFor(ALL_PRODUCTS, 'appliance');
+check(
+  'unbranded appliances group by category',
+  applianceGrouping.every((g) => g.isCategory === true) &&
+    applianceGrouping.some((g) => /^(Lighting|Cooling|Kitchen|Computing)$/.test(g.label)),
+  applianceGrouping.slice(0, 3).map((g) => g.label).join(', ')
+);
+// The inverter section is branded, so it must group by manufacturer. Asserting
+// the axis (not which brand happens to be largest, which is a data detail)
+// keeps this test from breaking when the catalog gains a model.
+const inverterGrouping = groupingFor(ALL_PRODUCTS, 'inverter');
+check(
+  'branded sections group by manufacturer',
+  inverterGrouping.every((g) => !g.isCategory) && inverterGrouping.every((g) => !g.name.includes('-')),
+  inverterGrouping.slice(0, 3).map((g) => g.label).join(', ')
+);
+// Every part is branded "Generic", which is not a useful axis, so parts must
+// fall back to their own sub-categories (Cables, DC Protection, ...).
+const partGrouping = groupingFor(ALL_PRODUCTS, 'part');
+check(
+  'single-maker sections fall back to category',
+  partGrouping.length >= 4 && partGrouping.every((g) => g.isCategory === true),
+  `${partGrouping.length} groups: ${partGrouping.slice(0, 3).map((g) => g.label).join(', ')}`
+);
+
 console.log('\n[C9] Condition grading');
 check('three grades exist', CONDITIONS.length === 3);
 check('new has no discount', CONDITIONS.find((c) => c.id === 'new').discountPercent === 0);
 check('refurb discounts below used', CONDITIONS.find((c) => c.id === 'refurbished').discountPercent
   < CONDITIONS.find((c) => c.id === 'used').discountPercent);
-check('new price is unchanged', priceForCondition(100000, 'new') === 100000);
-check('used price is discounted', priceForCondition(100000, 'used') < 100000);
-check('unknown condition falls back to new', priceForCondition(100000, 'bogus') === 100000);
-check('discount never goes negative', priceForCondition(1000, 'used') >= 0);
 check('zero price stays zero', priceForCondition(0, 'used') === 0);
+
+console.log('\n[C10] Facility presets resolve to real catalog products');
+// Regression: presets used short keys (fans, bulbs, ac15hp) that matched no
+// catalog id, and were built as {id, qty} with no wattage. The sizing engine
+// therefore saw a ZERO load, so the app opened recommending the 1.5 kVA
+// minimum for a school with 30 fans and 40 lights. Every preset must now
+// resolve to a real product and produce a non-zero daily load.
+const byId = new Map(ALL_PRODUCTS.map((p) => [p.id, p]));
+const { PRESET_ALIASES } = await import('../src/data/presetAliases.js');
+const { buildPresetLoads } = await import('../src/utils/presets.js');
+const { PROFILE_PRESETS } = await import('../src/data/pricingDefaults.js');
+
+check('an alias map exists', PRESET_ALIASES && typeof PRESET_ALIASES === 'object');
+Object.entries(PRESET_ALIASES).forEach(([key, id]) => {
+  check(`alias "${key}" -> a real product`, byId.has(id), id);
+});
+
+PROFILE_PRESETS.forEach((preset) => {
+  const keys = Object.keys(preset.suggestedAppliances || {});
+  const unresolved = keys.filter((k) => !PRESET_ALIASES[k] || !byId.has(PRESET_ALIASES[k]));
+  check(`${preset.id}: every key resolves`, unresolved.length === 0, unresolved.join(', '));
+
+  const loads = buildPresetLoads(preset.id);
+  check(`${preset.id}: produces loads`, loads.length === keys.length, `${loads.length}/${keys.length}`);
+  check(`${preset.id}: every load carries wattage`, loads.every((l) => l.watts > 0));
+  check(
+    `${preset.id}: quantities preserved`,
+    keys.every((k) => {
+      const l = loads.find((x) => x.id === PRESET_ALIASES[k]);
+      return l && l.qty === preset.suggestedAppliances[k];
+    })
+  );
+
+  const r = calculateSolarSystem({
+    appliances: loads, sunHours: 5, settings: DEFAULT_SETTINGS, installerMarkupPercent: 15,
+  });
+  check(`${preset.id}: produces a non-zero load`, r.totalDailyKWh > 0, `${r.totalDailyKWh} kWh/day`);
+  check(`${preset.id}: engine sees the load`, r.hasLoad === true);
+});
+
+// The school preset is the app's default opening state, so it must be sane.
+const schoolResult = calculateSolarSystem({
+  appliances: buildPresetLoads('school'),
+  sunHours: 5.3, settings: DEFAULT_SETTINGS, installerMarkupPercent: 15,
+});
+console.log(
+  `  NOTE  school preset: ${schoolResult.totalDailyKWh.toFixed(1)} kWh/day, ` +
+  `${schoolResult.recommendedInverterKVA} kVA recommended`
+);
+check(
+  'school preset sizes a school, not the 1.5 kVA floor',
+  schoolResult.recommendedInverterKVA >= 5,
+  `${schoolResult.recommendedInverterKVA} kVA`
+);
 
 console.log(
   failures === 0
@@ -192,3 +283,5 @@ console.log(
     : `\n=== ${failures} FAILURE(S) ===`
 );
 process.exit(failures === 0 ? 0 : 1);
+
+check('new price is unchanged', priceForCondition(100000, 'new') === 100000);

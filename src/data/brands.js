@@ -120,8 +120,75 @@ export function brandsForKind(products, kind) {
       counts.set(p.brand, (counts.get(p.brand) || 0) + 1);
     });
   return [...counts.entries()]
-    .map(([name, count]) => ({ ...getBrand(name), count }))
+    .map(([name, count]) => ({ ...getBrand(name), label: name, count }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
+
+/**
+ * The axis the catalog's tab bar groups by.
+ *
+ * Branded goods (inverters, batteries, panels, laptops) are grouped by
+ * manufacturer, which is how an installer actually thinks. Unbranded goods
+ * (appliances, parts) have no manufacturer at all — an LED bulb is a bulb, not a
+ * Philips part — so grouping by brand would yield ZERO tabs for the largest
+ * section in the catalog. Those sections fall back to grouping by category.
+ *
+ * Every returned group carries `label`, `count` and a mark, and the counts
+ * always sum to the section size, so the tab bar can never hide products.
+ */
+export function groupingFor(products, kind) {
+  const section = products.filter((p) => !kind || p.kind === kind);
+  const branded = section.filter((p) => p.brand);
+
+  // Group by manufacturer only when that actually produces a useful axis. Two
+  // conditions matter:
+  //   1. most of the section is branded (appliances are not), and
+  //   2. there is more than one distinct maker — a section where everything is
+  //      "Generic" (the parts list) would otherwise yield one useless tab and
+  //      no tab bar at all, so it falls through to category grouping.
+  if (branded.length > section.length / 2) {
+    const byBrand = brandsForKind(products, kind);
+    if (byBrand.length > 1) return byBrand;
+  }
+
+  // Unbranded: group by category (or the part sub-category).
+  const counts = new Map();
+  section.forEach((p) => {
+    const key = p.subCategory || p.category || p.kind;
+    if (!key) return;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+
+  return [...counts.entries()]
+    .map(([key, count]) => ({
+      // No manufacturer, so there is no logo: `brand` stays null and the mark
+      // falls back to a category glyph.
+      name: key,
+      label: CATEGORY_LABEL_FALLBACK[key] || titleCase(key),
+      count,
+      color: '#059669',
+      logo: null,
+      isCategory: true,
+    }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+const CATEGORY_LABEL_FALLBACK = {
+  lighting: 'Lighting',
+  cooling: 'Cooling',
+  refrigeration: 'Refrigeration',
+  kitchen: 'Kitchen',
+  computing: 'Computing',
+  entertainment: 'Entertainment',
+  security: 'Security',
+  pumps: 'Water & Pumps',
+  laundry: 'Laundry',
+  medical: 'Medical',
+  office: 'Office',
+  part: 'Parts & Spares',
+};
+
+const titleCase = (s) =>
+  String(s).replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
 export default BRANDS;

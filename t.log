@@ -1,0 +1,154 @@
+
+[C1] Catalog inventory
+  Total products: 438
+    inverter     58
+    battery      53
+    panel        59
+    laptop       52
+    desktop      55
+    appliance   118
+    part         43
+
+[C2] Every section is usefully stocked
+  PASS  inverter >= 50 -> 58
+  PASS  battery >= 50 -> 53
+  PASS  panel >= 50 -> 59
+  PASS  laptop >= 50 -> 52
+  PASS  desktop >= 50 -> 55
+  PASS  appliance >= 50 -> 118
+  PASS  part >= 30 -> 43
+
+[C3] Power data is present and sane
+  PASS  no product is missing power data -> ok
+  NOTE  2 solar-thermal units correctly draw 0 W
+  PASS  parts exist in the catalog -> 43 parts
+  PASS  every part has zero draw so sizing skips it
+  PASS  every part is priced
+  PASS  every part has a unit of sale
+  PASS  parts are excluded from load products
+  PASS  part section is registered
+  PASS  every battery has kWh + max discharge
+
+[C4] Identifiers are unique
+  PASS  no duplicate ids -> 438 ids
+
+[C5] Search works across the catalog
+  PASS  search "deye" returns results -> 7 hits
+  PASS  search "sunsynk" returns results -> 9 hits
+  PASS  search "pylontech" returns results -> 7 hits
+  PASS  search "macbook" returns results -> 6 hits
+  PASS  search "latitude" returns results -> 5 hits
+  PASS  search "freezer" returns results -> 12 hits
+  PASS  search "asdfghjkl" returns nothing
+  PASS  section filter narrows results
+
+[C6] Power labels are honest per product kind
+    inverter   "12 kW"
+    battery    "4.8 kWh"
+    panel      "580 Wp"
+    laptop     "22 W"
+    appliance  "9 W"
+  PASS  panel labelled in Wp
+  PASS  battery labelled in kWh
+  PASS  inverter labelled in kW
+
+[E1] Nigerian energy price data
+  PASS  5 NERC bands present
+  PASS  11 DisCos present
+  PASS  petrol default is realistic (â‚¦1000â€“â‚¦1500)
+
+[E2] Running-cost engine
+    Band A: â‚¦73,980/mo, â‚¦247/kWh effective
+  PASS  Band A monthly cost is positive
+  PASS  effective cost EXCEEDS the grid tariff (generator is real) -> 247 > 209.5
+    Band E: â‚¦100,200/mo
+  PASS  low-tariff band still costs MORE in practice -> 100200 > 73980
+  PASS  zero load costs nothing
+  PASS  negative load is clamped to zero
+
+[C7] Brand registry covers every product in the catalog
+  PASS  every product brand is registered -> ok
+  PASS  registry has an entry per brand -> 40 brands
+  PASS  every brand has an official colour
+  PASS  every brand has a slug
+  PASS  brand slugs are unique
+  PASS  getBrand is case tolerant
+  PASS  unknown brand still resolves
+  PASS  logo paths are set only where an asset is bundled
+  NOTE  7/40 brands have bundled artwork; the rest use a wordmark
+
+[C8] Manufacturer grouping
+  PASS  inverters group by manufacturer -> 11 brands
+  PASS  groups carry a product count
+  PASS  groups are sorted by depth
+  PASS  group counts sum to the section total -> 58/58
+  PASS  inverter: tab bar has groups -> 11 groups
+  PASS  inverter: tabs cover the whole section -> 58/58
+  PASS  inverter: every tab has a label and a mark
+  PASS  battery: tab bar has groups -> 13 groups
+  PASS  battery: tabs cover the whole section -> 53/53
+  PASS  battery: every tab has a label and a mark
+  PASS  panel: tab bar has groups -> 10 groups
+  PASS  panel: tabs cover the whole section -> 59/59
+  PASS  panel: every tab has a label and a mark
+  PASS  laptop: tab bar has groups -> 6 groups
+  PASS  laptop: tabs cover the whole section -> 52/52
+  PASS  laptop: every tab has a label and a mark
+  PASS  desktop: tab bar has groups -> 8 groups
+  PASS  desktop: tabs cover the whole section -> 55/55
+  PASS  desktop: every tab has a label and a mark
+  PASS  appliance: tab bar has groups -> 13 groups
+  PASS  appliance: tabs cover the whole section -> 118/118
+  PASS  appliance: every tab has a label and a mark
+  PASS  part: tab bar has groups -> 6 groups
+  PASS  part: tabs cover the whole section -> 43/43
+  PASS  part: every tab has a label and a mark
+  PASS  unbranded appliances group by category -> Cooling, Kitchen, Computing
+  PASS  branded sections group by manufacturer -> Sunsynk, Growatt, Deye
+  PASS  single-maker sections fall back to category -> 6 groups: Cables, AC Protection, Connectors
+
+[C9] Condition grading
+  PASS  three grades exist
+  PASS  new has no discount
+  PASS  refurb discounts below used
+  PASS  zero price stays zero
+
+[C10] Facility presets resolve to real catalog products
+  PASS  an alias map exists
+  PASS  alias "fans" -> a real product -> app-cooling-ceiling-fan-standard-
+  PASS  alias "ac15hp" -> a real product -> app-cooling-1-5-hp-split-inverter-ac
+  PASS  alias "bulbs" -> a real product -> app-lighting-led-bulb-18w-cool-day-
+  PASS  alias "computers" -> a real product -> app-computing-desktop-pc-office-
+  PASS  alias "cctv_wifi" -> a real product -> app-security-cctv-kit-8-cameras-nvr-
+  PASS  alias "pumping_machine" -> a real product -> app-pumps-water-pumping-machine-1-5hp
+  PASS  alias "freezer" -> a real product -> app-refrigeration-chest-freezer-300l
+  PASS  alias "fridge" -> a real product -> app-refrigeration-double-door-fridge-350l
+  PASS  alias "tv" -> a real product -> app-entertainment-43-smart-tv
+  PASS  school: every key resolves
+  PASS  school: produces loads -> 6/6
+  PASS  school: every load carries wattage
+  PASS  school: quantities preserved
+  PASS  school: produces a non-zero load -> 85 kWh/day
+  PASS  school: engine sees the load
+  PASS  home_3bed: every key resolves
+  PASS  home_3bed: produces loads -> 8/8
+  PASS  home_3bed: every load carries wattage
+  PASS  home_3bed: quantities preserved
+  PASS  home_3bed: produces a non-zero load -> 128.2 kWh/day
+  PASS  home_3bed: engine sees the load
+  PASS  office: every key resolves
+  PASS  office: produces loads -> 6/6
+  PASS  office: every load carries wattage
+  PASS  office: quantities preserved
+  PASS  office: produces a non-zero load -> 100.4 kWh/day
+  PASS  office: engine sees the load
+  PASS  custom: every key resolves
+  PASS  custom: produces loads -> 4/4
+  PASS  custom: every load carries wattage
+  PASS  custom: quantities preserved
+  PASS  custom: produces a non-zero load -> 12 kWh/day
+  PASS  custom: engine sees the load
+  NOTE  school preset: 85.0 kWh/day, 15 kVA recommended
+  PASS  school preset sizes a school, not the 1.5 kVA floor -> 15 kVA
+
+=== CATALOG + ENERGY: ALL PASSED ===
