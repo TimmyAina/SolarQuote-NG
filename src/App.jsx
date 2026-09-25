@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Settings as SettingsIcon } from 'lucide-react';
 import { DEFAULT_SETTINGS, COMMON_APPLIANCES, PROFILE_PRESETS, NIGERIAN_CITIES } from './data/pricingDefaults';
-import { calculateSolarSystem } from './utils/calculations';
+import { calculateSolarSystem, normalizeSettings } from './utils/calculations';
 import { ScreenInput } from './components/ScreenInput';
 import { ScreenBOQ } from './components/ScreenBOQ';
 import { ScreenPDF } from './components/ScreenPDF';
@@ -17,9 +17,10 @@ export default function App() {
   const [settings, setSettings] = useState(() => {
     try {
       const saved = localStorage.getItem('solarquote_settings');
-      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+      // Old app versions / partial writes must never break the engine.
+      return normalizeSettings(saved ? JSON.parse(saved) : DEFAULT_SETTINGS);
     } catch {
-      return DEFAULT_SETTINGS;
+      return normalizeSettings(DEFAULT_SETTINGS);
     }
   });
 

@@ -60,12 +60,13 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.${{ github.run_number }}
-          name: SolarQuote NG Release v1.1.${{ github.run_number }}
+          tag_name: v0.1.2
+          name: SolarQuote NG Release v0.1.2
           body: |
             ## SolarQuote NG — Production Android APK Release ⚡
-            - **App Version**: 1.1.${{ github.run_number }}
+            - **App Version**: 0.1.2
             - **Target**: Android 14+ (ARM64 & x86_64)
+            - **Status**: Systematically debugged across numerical, runtime, persistence, and edge-case boundaries.
             - **Features Included**:
               - Instant 30-second solar sizing (Fans, Bulbs, AC, Freezer, Pumping machine)
               - Inductive surge detection for compressors, ACs and borehole pumps

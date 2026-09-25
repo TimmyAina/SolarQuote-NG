@@ -7,8 +7,9 @@ A professional solar sizing, quotation, and Bill of Quantities (BOQ) generation 
 ## ⚡ Direct 1-Click APK Download
 
 - **Latest Release**: [Download the newest APK](https://github.com/TimmyAina/SolarQuote-NG/releases/latest) — every push to `main` publishes a fresh build automatically.
-- **Direct APK File**: `app-debug.apk` attached to the newest release (Size: ~4 MB).
-- **First public build**: [v1.0.1](https://github.com/TimmyAina/SolarQuote-NG/releases/tag/v1.0.1)
+- **Direct APK (v0.1.2)**: [Download v0.1.2 app-debug.apk](https://github.com/TimmyAina/SolarQuote-NG/releases/download/v0.1.2/app-debug.apk) (Size: ~4 MB).
+- **Direct APK File**: `app-debug.apk` attached to the newest release.
+- **Release History**: [v0.1.2](https://github.com/TimmyAina/SolarQuote-NG/releases/tag/v0.1.2) · [v1.1.3](https://github.com/TimmyAina/SolarQuote-NG/releases/tag/v1.1.3) · [v1.0.1](https://github.com/TimmyAina/SolarQuote-NG/releases/tag/v1.0.1)
 
 ---
 
