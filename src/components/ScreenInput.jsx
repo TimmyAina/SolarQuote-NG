@@ -123,6 +123,21 @@ export function ScreenInput({
         updateField={updateApplianceField}
         updateQty={updateApplianceQty}
       />
+      {/* Heavy Load / Inductive Surge Warning */}
+      {appliances.some(a => ['ac1hp', 'ac15hp', 'ac2hp', 'pumping_machine'].includes(a.id) && (a.qty || 0) > 0) && (
+        <div className="bg-amber-500/10 border border-amber-500/40 rounded-xl p-3 flex items-start gap-2.5">
+          <div className="p-1 bg-amber-500/20 text-amber-400 rounded-md mt-0.5">
+            ⚡
+          </div>
+          <div className="text-xs">
+            <span className="font-bold text-amber-400">Inductive Compressor / Pump Surge Detected:</span>
+            <p className="text-slate-300 mt-0.5">
+              The engine automatically adds safe starting surge cushions to prevent your inverter from tripping when ACs or boreholes start up.
+            </p>
+          </div>
+        </div>
+      )}
+
 
       {/* Floating Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 p-4 z-30 max-w-2xl mx-auto flex items-center justify-between">

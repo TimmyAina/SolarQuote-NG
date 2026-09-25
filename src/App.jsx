@@ -12,6 +12,7 @@ export default function App() {
   const [selectedPreset, setSelectedPreset] = useState('school');
   const [selectedCity, setSelectedCity] = useState(NIGERIAN_CITIES[0]);
   const [selectedTierIndex, setSelectedTierIndex] = useState(1);
+  const [installerMarkup, setInstallerMarkup] = useState(15);
   
   const [settings, setSettings] = useState(() => {
     try {
@@ -45,7 +46,8 @@ export default function App() {
     appliances,
     sunHours: selectedCity.sunHours,
     backupHoursNight: 8,
-    settings
+    settings,
+    installerMarkupPercent: installerMarkup
   });
 
   return (
@@ -121,6 +123,8 @@ export default function App() {
             calcResult={calcResult}
             selectedTierIndex={selectedTierIndex}
             setSelectedTierIndex={setSelectedTierIndex}
+            installerMarkup={installerMarkup}
+            setInstallerMarkup={setInstallerMarkup}
             onBack={() => setActiveTab('input')}
             onProceedToPDF={() => setActiveTab('pdf')}
           />
@@ -131,6 +135,7 @@ export default function App() {
             calcResult={calcResult}
             selectedTierIndex={selectedTierIndex}
             settings={settings}
+            setSettings={setSettings}
             appliances={appliances}
             onBack={() => setActiveTab('boq')}
           />

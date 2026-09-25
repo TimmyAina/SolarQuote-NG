@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS = {
   installerEmail: "quotes@solarquoteng.com",
   installerAddress: "Plot 14 Trans-Amadi, Port Harcourt / Ikeja, Lagos",
   installerTagline: "Certified Renewable Energy & Electrical Engineering",
+  installerLogo: null, // base64 PNG data URL set from the PDF screen (stored in localStorage)
   
   // Market Benchmarks in Nigeria (NGN)
   petrolPricePerLiter: 1150,

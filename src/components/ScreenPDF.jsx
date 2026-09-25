@@ -1,23 +1,53 @@
 import React, { useState } from 'react';
-import { FileDown, ArrowLeft, Lock, CheckCircle2 } from 'lucide-react';
+import { FileDown, ArrowLeft, Lock, CheckCircle2, ImagePlus, Trash2, PenLine } from 'lucide-react';
 import { generateBOQReport } from '../utils/pdfGenerator';
 import { formatNaira } from '../utils/calculations';
+import { SignaturePad } from './SignaturePad';
 
 export function ScreenPDF({
   calcResult,
   selectedTierIndex,
   settings,
+  setSettings,
   appliances,
   onBack
 }) {
   const [clientName, setClientName] = useState("Alhaji S. Adeleke");
   const [clientPhone, setClientPhone] = useState("+234 802 334 5678");
   const [clientAddress, setClientAddress] = useState("Lekki Phase 1, Lagos");
+  const [docType, setDocType] = useState('boq');
+  const [signatureBase64, setSignatureBase64] = useState(null);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
 
   const activeTier = calcResult.tiers[selectedTierIndex];
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const maxWidth = 400;
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        setSettings(prev => ({ ...prev, installerLogo: canvas.toDataURL('image/png') }));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleRemoveLogo = () => {
+    setSettings(prev => ({ ...prev, installerLogo: null }));
+  };
 
   const handleDownloadPDF = () => {
     setIsGenerating(true);
@@ -30,9 +60,12 @@ export function ScreenPDF({
           selectedTierIndex,
           calcResult,
           settings,
-          appliances
+          docType,
+          logoBase64: settings.installerLogo || null,
+          signatureBase64
         });
-        doc.save(`SolarQuote_${clientName.replace(/\s+/g, '_')}_BOQ.pdf`);
+        const prefix = docType === 'invoice' ? 'Invoice' : docType === 'receipt' ? 'Receipt' : 'BOQ';
+        doc.save(`SolarQuote_${clientName.replace(/\s+/g, '_')}_${prefix}.pdf`);
       } catch (err) {
         console.error("PDF error:", err);
         alert("Failed to create PDF. Please retry.");
@@ -80,13 +113,110 @@ export function ScreenPDF({
         </div>
       </div>
 
-      {/* Installer Branding Preview */}
+      {/* Document Type Selector */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-        <p className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-1">
+        <h3 className="font-bold text-sm text-slate-200 mb-2">Document Type</h3>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { id: 'boq', label: 'BOQ Quote', note: 'Engineering breakdown' },
+            { id: 'invoice', label: 'Invoice', note: 'Commercial billing' },
+            { id: 'receipt', label: 'Receipt', note: 'Payment confirmation' }
+          ].map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setDocType(t.id)}
+              className={`py-2 rounded-xl border text-center transition-all ${
+                docType === t.id
+                  ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300'
+                  : 'bg-slate-950 border-slate-800 text-slate-400'
+              }`}
+            >
+              <span className="block text-xs font-bold">{t.label}</span>
+              <span className="block text-[10px] mt-0.5 opacity-80">{t.note}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Installer Branding & Logo */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">
           Installer Company Header
         </p>
-        <h4 className="font-bold text-sm text-white">{settings.installerName}</h4>
-        <p className="text-xs text-slate-400">{settings.installerPhone} • {settings.installerAddress}</p>
+        <div className="flex items-center gap-3">
+          <div className="w-14 h-14 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+            {settings.installerLogo ? (
+              <img src={settings.installerLogo} alt="Company logo" className="w-full h-full object-contain" />
+            ) : (
+              <ImagePlus className="w-5 h-5 text-slate-600" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <h4 className="font-bold text-sm text-white truncate">{settings.installerName}</h4>
+            <p className="text-xs text-slate-400 truncate">
+              {settings.installerPhone} • {settings.installerAddress}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="flex-1 text-center py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-300 cursor-pointer hover:border-emerald-500/60">
+            <span>{settings.installerLogo ? 'Replace Logo' : 'Upload Company Logo'}</span>
+            <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+          </label>
+          {settings.installerLogo && (
+            <button
+              type="button"
+              onClick={handleRemoveLogo}
+              className="p-2 rounded-xl bg-rose-950/60 border border-rose-900 text-rose-400"
+              title="Remove logo"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <p className="text-[11px] text-slate-500">
+          Saved on this device and printed in the PDF header above your company details.
+        </p>
+      </div>
+
+      {/* Signature */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-400">Authorized Signature</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Sign on screen to seal the PDF quote</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowSignaturePad(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold"
+          >
+            <PenLine className="w-3.5 h-3.5" />
+            <span>{signatureBase64 ? 'Re-sign' : 'Sign Here'}</span>
+          </button>
+        </div>
+
+        {signatureBase64 ? (
+          <div className="flex items-center gap-3">
+            <div className="flex-1 bg-white rounded-xl p-1.5 border border-slate-700">
+              <img src={signatureBase64} alt="Signature" className="h-12 w-full object-contain" />
+            </div>
+            <button
+              type="button"
+              onClick={() => setSignatureBase64(null)}
+              className="p-2 rounded-xl bg-rose-950/60 border border-rose-900 text-rose-400"
+              title="Clear signature"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <p className="text-[11px] text-slate-500">
+            No signature attached yet — the PDF will foot with your company name only.
+          </p>
+        )}
       </div>
 
       {/* Action / Paywall Area */}
@@ -97,6 +227,7 @@ export function ScreenPDF({
         onSimulateUnlock={() => setIsUnlocked(true)}
         onDownload={handleDownloadPDF}
         activeTier={activeTier}
+        docType={docType}
       />
 
       {/* Paystack Modal */}
@@ -107,6 +238,17 @@ export function ScreenPDF({
             setIsUnlocked(true);
             setShowPayModal(false);
           }}
+        />
+      )}
+
+      {/* Signature Pad Modal */}
+      {showSignaturePad && (
+        <SignaturePad
+          onSave={(dataUrl) => {
+            setSignatureBase64(dataUrl);
+            setShowSignaturePad(false);
+          }}
+          onCancel={() => setShowSignaturePad(false)}
         />
       )}
 
@@ -135,14 +277,15 @@ export function ScreenPDF({
   );
 }
 
-function PaywallOrReady({ isUnlocked, isGenerating, onPayClick, onSimulateUnlock, onDownload, activeTier }) {
+function PaywallOrReady({ isUnlocked, isGenerating, onPayClick, onSimulateUnlock, onDownload, activeTier, docType = 'boq' }) {
+  const docLabel = docType === 'invoice' ? 'Invoice' : docType === 'receipt' ? 'Receipt' : 'BOQ Quotation';
   if (isUnlocked) {
     return (
       <div className="bg-emerald-950/60 border border-emerald-600/40 rounded-2xl p-5 text-center">
         <div className="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-2">
           <CheckCircle2 className="w-5 h-5" />
         </div>
-        <h3 className="font-bold text-base text-white">Quotation Unlocked</h3>
+        <h3 className="font-bold text-base text-white">{docLabel} Unlocked</h3>
         <p className="text-xs text-slate-300 mt-0.5">Ready for download with {activeTier.name} hardware.</p>
         <button
           type="button"
@@ -151,7 +294,7 @@ function PaywallOrReady({ isUnlocked, isGenerating, onPayClick, onSimulateUnlock
           className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg active:scale-95 transition"
         >
           <FileDown className="w-4 h-4" />
-          <span>{isGenerating ? "Building PDF..." : "Download Official BOQ PDF"}</span>
+          <span>{isGenerating ? "Building PDF..." : `Download ${docLabel} PDF`}</span>
         </button>
       </div>
     );

@@ -60,18 +60,23 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: SolarQuote NG Release v1.0.${{ github.run_number }}
+          tag_name: v1.1.${{ github.run_number }}
+          name: SolarQuote NG Release v1.1.${{ github.run_number }}
           body: |
             ## SolarQuote NG — Production Android APK Release ⚡
-            - **App Version**: 1.0.${{ github.run_number }}
+            - **App Version**: 1.1.${{ github.run_number }}
             - **Target**: Android 14+ (ARM64 & x86_64)
             - **Features Included**:
               - Instant 30-second solar sizing (Fans, Bulbs, AC, Freezer, Pumping machine)
+              - Inductive surge detection for compressors, ACs and borehole pumps
+              - DC cable, DC breaker/isolator and roof footprint (area + dead load) engineering specs
+              - Private installer margin slider (5%–40%) that never prints on the client quote
+              - Payment milestones: 70% mobilization / 20% mounting / 10% commissioning
+              - 5-year Generator-vs-Solar lifecycle savings with payback in months
               - 3 Equipment Quality Tiers (Economy, Standard, Premium)
-              - Monthly fuel avoidance and NEPA cost payback engine
-              - High-resolution branded PDF Bill of Quantities (BOQ) with installer phone & credentials
-              - Paystack paywall simulation (₦2,000 / BOQ unlock)
+              - Branded PDF BOQ, Invoice and Receipt with company logo upload
+              - On-screen signature pad embedded above the authorized signature block
+              - Paystack paywall simulation (₦2,000 / document unlock)
               - Admin panel for real-time equipment pricing updates
           files: |
             android/app/build/outputs/apk/debug/app-debug.apk
