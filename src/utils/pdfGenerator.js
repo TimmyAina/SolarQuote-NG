@@ -4,7 +4,7 @@
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { formatNaira } from './calculations.js';
-import { applyNairaFont } from '../fonts/noto-sans.js';
+import { applyNairaFont } from '../fonts/noto-sans-subset.js';
 
 /**
  * jsPDF's built-in fonts (helvetica etc.) only cover WinAnsi/CP-1252, which has

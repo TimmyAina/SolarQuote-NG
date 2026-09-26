@@ -65,7 +65,7 @@ const walk = (dir) => {
     if (statSync(p).isDirectory()) { walk(p); return; }
     if (!EXTS.has(extname(p))) return;
     // Generated blobs hold bytes rather than prose.
-    if (p.includes('noto-sans') || p.includes('brandLogos.generated')) return;
+    if (p.includes('noto-sans-subset') || p.includes('brandLogos.generated')) return;
     scan(p, readFileSync(p, 'utf8'));
   });
 };

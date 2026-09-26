@@ -146,6 +146,7 @@ export function SettingsScreen({ onOpenWallet }) {
 
         <p className="sq-label">Electricity distribution company</p>
         <select
+            aria-label="Electricity distribution company"
           value={settings.discoId}
           onChange={(e) => patch('discoId', e.target.value)}
           className="sq-input"

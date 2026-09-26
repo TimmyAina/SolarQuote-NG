@@ -67,6 +67,7 @@ export function LoadsScreen({
           <div className="min-w-0 flex-1">
             <p className="sq-label">Installation region</p>
             <select
+              aria-label="Installation region"
               value={selectedCity.name}
               onChange={(e) => {
                 const city = NIGERIAN_CITIES.find((c) => c.name === e.target.value);
@@ -203,7 +204,7 @@ function LoadRow({ item, isSimple, onQty, onField }) {
             aria-label={`Remove one ${name}`}
             className="w-11 h-11 rounded-lg border border-line bg-surface-2 text-ink-2 flex items-center justify-center"
           >
-            {item.qty <= 1 ? <Trash2 className="w-3.5 h-3.5" /> : '−'}
+            {item.qty <= 1 ? <Trash2 className="w-3.5 h-3.5" /> : 'âˆ’'}
           </button>
           <input
             type="number"

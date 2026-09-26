@@ -12,6 +12,7 @@ import {
   Sun, Wallet, TrendingDown, Fuel, Bolt, ArrowRight, Plus,
 } from 'lucide-react';
 import { formatNaira } from '../utils/calculations.js';
+import { CategoryTile } from './CategoryTile.jsx';
 import { ProductVisual } from './ProductVisual.jsx';
 import { CATALOG_SECTIONS } from '../data/catalog/index.js';
 
@@ -192,10 +193,13 @@ export function HomeScreen({ costs, calcResult, quoteNumber, onNavigate }) {
               className="sq-card p-3 text-left hover:shadow-lift transition-shadow"
             >
               <div className="h-12 rounded-lg overflow-hidden mb-2">
-                <ProductVisual
-                  product={{ kind: s.id, brand: s.label, name: s.label }}
-                  size="sm"
-                />
+                {/* This is a CATEGORY tile, not a manufacturer one. It used to
+                    pass the section label as `brand`, so getBrand() missed and
+                    the fallback painted the initials "IN" in the accent colour
+                    on a 12%-alpha wash — 3.2:1, under the 4.5:1 floor. A
+                    category glyph on a solid surface is both correct and
+                    legible. */}
+                <CategoryTile kind={s.id} />
               </div>
               <p className="text-[11px] font-extrabold leading-tight">{s.shortLabel}</p>
               <p className="text-[10px] text-ink-3 font-bold tnum">{s.count} items</p>

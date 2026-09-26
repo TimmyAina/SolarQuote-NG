@@ -10,22 +10,62 @@ export const AUDIT_FN = `function audit() {
               docW: document.documentElement.scrollWidth, winW: window.innerWidth };
   function srgb(c) { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
   function lum(c) { return 0.2126 * srgb(c[0]) + 0.7152 * srgb(c[1]) + 0.0722 * srgb(c[2]); }
+  // WCAG contrast ratio between two opaque colours.
+  function contrast(a, b) {
+    var L1 = lum(a), L2 = lum(b);
+    return (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+  }
+  // Parses a CSS colour to [r,g,b,a]. The alpha is kept so it can be composited.
   function parse(s) {
     if (!s) return null;
     var m = s.match(/rgba?\\(([^)]+)\\)/);
     if (!m) return null;
     var p = m[1].split(',').map(parseFloat);
     if (p.length > 3 && p[3] === 0) return null;
-    return [p[0], p[1], p[2]];
+    return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1];
   }
+  // Composites a translucent colour over an opaque one.
+  function over(fg, bg) {
+    var a = fg[3];
+    if (a >= 1) return [fg[0], fg[1], fg[2]];
+    return [fg[0] * a + bg[0] * (1 - a),
+            fg[1] * a + bg[1] * (1 - a),
+            fg[2] * a + bg[2] * (1 - a)];
+  }
+  // A gradient's effective colour is unknowable without rasterising, so take
+  // the WORST (lowest contrast) of its stops. Honest and conservative, rather
+  // than reporting a false failure from an unreadable background.
+  function stopsOf(el) {
+    var bi = getComputedStyle(el).backgroundImage;
+    if (!bi || bi === 'none' || bi.indexOf('gradient') === -1) return null;
+    var out = [];
+    bi.replace(/rgba?\\(([^)]+)\\)/g, function (_, body) {
+      var p = body.split(',').map(parseFloat);
+      if (p.length < 3) return;
+      out.push([p[0], p[1], p[2], p.length > 3 ? p[3] : 1]);
+    });
+    return out.length ? out : null;
+  }
+  // Resolves the backdrop BEHIND an element's text.
+  // It must skip the element's own background: a tile that paints its own
+  // surface and its own label colour would otherwise be compared against
+  // itself and always score 1.00, which is how brand wordmarks were reported
+  // as unreadable when they are not.
   function bgOf(el) {
-    var n = el;
+    var n = el.parentElement;
     while (n && n !== document.documentElement) {
       var c = parse(getComputedStyle(n).backgroundColor);
       if (c) return c;
       n = n.parentElement;
     }
-    return parse(getComputedStyle(document.body).backgroundColor) || [255, 255, 255];
+    return parse(getComputedStyle(document.body).backgroundColor) || [255, 255, 255, 1];
+  }
+  // A tile that paints its own surface must use that surface as its backdrop.
+  function ownBg(el) {
+    var st = getComputedStyle(el);
+    if (st.backgroundImage && st.backgroundImage !== 'none') return null;
+    var c = parse(st.backgroundColor);
+    return c && c[3] === 1 ? c : null;
   }
   function textOf(el) { return (el.innerText || el.textContent || '').trim(); }
 
@@ -71,10 +111,38 @@ export const AUDIT_FN = `function audit() {
       var n2 = el.childNodes[j];
       if (n2.nodeType === 3 && n2.textContent.trim()) { hasText = true; break; }
     }
-    if (hasText && parseFloat(cs.opacity) > 0.5) {
-      var fg = parse(cs.color);
-      if (fg) {
-        var L1 = lum(fg), L2 = lum(bgOf(el));
+    if (hasText && parseFloat(cs.opacity) > 0.05) {
+      var fg0 = parse(cs.color);
+      if (fg0) {
+        // Composite translucent text over its real backdrop. When an ancestor
+        // paints a gradient, use the WORST stop so the check is conservative
+        // rather than silently comparing against the wrong surface.
+        var parent = bgOf(el);
+        var bg = parent;
+        var own = ownBg(el);
+        if (own) bg = own;
+        var stops = stopsOf(el);
+        if (!stops) {
+          var n3 = el;
+          while (n3 && n3 !== document.documentElement && !stops) {
+            stops = stopsOf(n3);
+            n3 = n3.parentElement;
+          }
+        }
+        if (stops) {
+          // Pick the stop that yields the WORST contrast against this text, not
+          // simply the darkest. On a light theme the darkest is right; in dark
+          // theme the LIGHTEST stop is the hostile one, and taking the darkest
+          // there silently under-reports the problem.
+          var fgp = over([fg0[0], fg0[1], fg0[2],
+            (fg0[3] === undefined ? 1 : fg0[3]) * parseFloat(cs.opacity)], parent);
+          bg = stops.map(function (s) { return over(s, parent); })
+                   .sort(function (a, b) { return contrast(a, fgp) - contrast(b, fgp); })[0];
+        }
+        // Element-level opacity scales the text toward the backdrop.
+        var a = (fg0[3] === undefined ? 1 : fg0[3]) * parseFloat(cs.opacity);
+        var fg = over([fg0[0], fg0[1], fg0[2], a], bg);
+        var L1 = lum(fg), L2 = lum(bg);
         var ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
         var size = parseFloat(cs.fontSize);
         var bold = parseInt(cs.fontWeight, 10) >= 700;

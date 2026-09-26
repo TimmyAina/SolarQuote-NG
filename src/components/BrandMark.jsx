@@ -16,6 +16,8 @@
  */
 import React from 'react';
 import { getBrand } from '../data/brands.js';
+import { useApp } from '../context/AppContext.jsx';
+import { readableLabel } from '../utils/contrast.js';
 
 const SIZES = {
   xs: { box: 'w-6 h-6', text: 'text-[8px]', pad: 'p-1' },
@@ -43,11 +45,16 @@ function labelFor(name = '', maxChars = 10) {
 }
 
 export function BrandMark({ brand, size = 'md', className = '', showName = false }) {
+
   const b = getBrand(brand);
   if (!b) return null;
 
   const s = SIZES[size] || SIZES.md;
   const name = b.name;
+  // The wash is identical in both themes, so the label must be solved per theme:
+  // pushing it toward black is right on a light canvas and catastrophic on a
+  // dark one, where it produced pure black on near-black (1.29:1, invisible).
+  const isDark = useApp().isDark;
 
   if (b.logo) {
     return (
@@ -72,7 +79,15 @@ export function BrandMark({ brand, size = 'md', className = '', showName = false
   return (
     <span
       className={`inline-flex items-center justify-center shrink-0 rounded-xl font-extrabold leading-none ${s.box} ${s.text} ${className}`}
-      style={{ background: `${b.color}1A`, color: b.color, boxShadow: `inset 0 0 0 1px ${b.color}33` }}
+      // The fill is a 10% wash of the brand colour, so the wash keeps the brand
+      // identity. The LABEL is not the raw brand colour: a pale brand (Risen)
+      // measured 1.91:1 on its own wash. labelOnWash() darkens only as far as
+      // needed to clear 4.5:1, so the brand still reads as the brand.
+      style={{
+        background: `${b.color}1A`,
+        color: readableLabel(b.color, isDark ? 'dark' : 'light'),
+        boxShadow: `inset 0 0 0 1px ${b.color}33`,
+      }}
       role="img"
       aria-label={name}
     >

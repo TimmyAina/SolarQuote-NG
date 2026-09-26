@@ -216,7 +216,7 @@ function CatalogFilters({
           data-active={section === ALL}
           onClick={() => { setSection(ALL); setBrand(null); }}
         >
-          All <span className="opacity-70 tnum">{TOTAL_PRODUCT_COUNT}</span>
+          All <span className="sq-count tnum">{TOTAL_PRODUCT_COUNT}</span>
         </button>
         {CATALOG_SECTIONS.map((s) => (
           <button
@@ -226,7 +226,7 @@ function CatalogFilters({
             data-active={section === s.id}
             onClick={() => { setSection(s.id); setBrand(null); }}
           >
-            {s.shortLabel} <span className="opacity-70 tnum">{s.count}</span>
+            {s.shortLabel} <span className="sq-count tnum">{s.count}</span>
           </button>
         ))}
       </div>
@@ -303,14 +303,18 @@ function ProductGrid({ products, onSelect, total }) {
               className="sq-card overflow-hidden text-left hover:shadow-lift transition-shadow active:scale-[0.99] relative"
             >
               <div className="h-24 w-full">
-                {/* The card overlays its own <BrandMark> badge, so the tile must not
-                  repeat the brand initials as well. */}
+                {/* The tile itself carries the brand's colour, and the line below
+                  names the manufacturer in full, so the card needs no initials
+                  badge. It used to sit at 8px in the brand colour on a tinted
+                  tile — the lowest-contrast, least readable thing on the card,
+                  and pure duplication of the text underneath it. */}
               <ProductVisual product={p} showBrand={false} />
               </div>
-              {/* Manufacturer mark, so the producer is identifiable on the card */}
-              <span className="absolute top-1.5 left-1.5">
-                <BrandMark brand={p.brand} size="xs" className="shadow-sm ring-1 ring-black/5" />
-              </span>
+              {/* No initials badge over the tile. The card states the manufacturer
+                  in full on the line below, and the tile already carries the
+                  brand's own colour, so the badge was redundant — and as the
+                  smallest, lowest-contrast element on the card it was the one
+                  thing an installer could not read. */}
               {p.custom && (
                 <span className="absolute top-1.5 right-1.5 text-[9px] font-extrabold uppercase tracking-wide text-white bg-accent px-1.5 py-0.5 rounded-md">
                   Yours

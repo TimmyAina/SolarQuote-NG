@@ -87,6 +87,23 @@ check(
   JSON.stringify(formatNaira(500))
 );
 
+console.log('\n[2c] The embedded font stays small (the Android white-screen fix)');
+// Regression: shipping the full 569KB Noto Sans and registering it as both
+// 'normal' and 'bold' cost 13-17MB of heap and 300-400ms of main-thread work
+// per generation, which froze and then whited-out the WebView. The font is now
+// subsetted; these assertions stop anyone reintroducing the full file.
+{
+  const { statSync } = await import('node:fs');
+  const size = statSync('src/fonts/noto-sans-subset.js').size;
+  console.log(`  INFO  embedded font module is ${(size / 1024).toFixed(1)}KB`);
+  check('embedded font module is under 64KB', size < 64 * 1024, `${(size / 1024).toFixed(1)}KB`);
+  // Two streams is correct (real regular + bold); more means duplication again.
+  const streams = (nairaText.match(/\/FontFile2/g) || []).length;
+  check('font embedded at most twice (regular + bold)', streams >= 1 && streams <= 2, `${streams} streams`);
+  const { NOTOSANS_CODEPOINTS } = await import('../src/fonts/noto-sans-subset.js');
+  check('subset declares the Naira sign', NOTOSANS_CODEPOINTS.includes(0x20a6));
+}
+
 console.log('\n[3] Native branch selection');
 const fs = await import('node:fs');
 const src = fs.readFileSync('src/utils/pdfExport.js', 'utf8');

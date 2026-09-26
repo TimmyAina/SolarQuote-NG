@@ -1,14 +1,22 @@
 /**
  * SolarQuote NG — Design System
  * ---------------------------------------------------------------------------
- * Generated from the UI/UX Pro Max design system for a Nigerian solar-installer
- * quotation tool (domain search: "solar energy quotation tool, mobile, data
- * dense catalog, trust and money", density 7/10):
+ * UI/UX Pro Max, queried with the product described plainly: a FIELD CALCULATOR
+ * for a Nigerian solar installer working on a tablet, offline. Not a SaaS, not
+ * a marketing site. That framing changed the answer materially.
  *
- *   Style      Organic Biophilic — nature, green, rounded, sustainable
- *   Palette    emerald #059669 primary, #ECFDF5 canvas, #064E3B ink
- *   Type       Fira Sans body, Fira Code for figures and technical values
- *   Radius     16-24px
+ *   Style      Minimalism & Swiss — clean, spacious, high contrast, grid-based,
+ *              "essential", explicitly for professional tools. WCAG AAA.
+ *   Palette    Navy #1E3A5F primary (structure), emerald #059669 as the ACCENT
+ *              only (CTA, active, money). Neutral slate surfaces, not a green wash.
+ *   Type       Fira Sans for UI, Fira Code for every figure — a calculator's
+ *              numbers must align in columns.
+ *   AVOID      Excessive decoration. The number is the hero.
+ *
+ * Earlier revisions used an "Organic Biophilic" emerald-on-mint palette. That
+ * read as a wellness app, not an instrument. Navy carries the structure and
+ * emerald is reserved for the things that matter, so a screen has ONE loud
+ * element instead of a dozen.
  *
  * Token-driven theming: every surface reads from a CSS variable, so light and
  * dark are ONE component tree, never two hardcoded hex palettes.
@@ -19,30 +27,29 @@
 
 @layer base {
   :root {
-    /* Primary / accent — emerald, the "solar + sustainable + money" green */
-    --sq-primary: #064e3b;
+    /* Navy carries structure: headers, the brand mark, primary buttons. */
+    --sq-primary: #1e3a5f;
     --sq-primary-fg: #ffffff;
-    /* Emerald, darkened one step from #059669. The skill's palette proposes
-       #059669, but white label text on it measures 3.77:1 and FAILS WCAG AA
-       (4.5:1) — and this is the colour of the main CTA on every screen.
+    /* Emerald is the ACCENT, not the whole app: CTAs, active state, money. The
+       skill proposes #059669, but white label text on it measures 3.77:1 and
+       FAILS WCAG AA (4.5:1) — and this is the main CTA on every screen.
        #047857 measures 5.48:1 and is visually near-identical. */
     --sq-accent: #047857;
     --sq-accent-fg: #ffffff;
-    --sq-sun: #d97706;
+    --sq-sun: #b45309;
 
-    --sq-canvas: #f2fbf7;
+    /* Neutral slate surfaces. A green-tinted canvas made every card look like a
+       plant, and washed out the one colour that has to mean something. */
+    --sq-canvas: #f8fafc;
     --sq-surface: #ffffff;
-    --sq-surface-2: #ecfdf5;
-    --sq-surface-3: #d1fae5;
-    --sq-line: #d3e8dd;
-    --sq-line-strong: #a7d8c3;
+    --sq-surface-2: #f1f5f9;
+    --sq-surface-3: #e2e8f0;
+    --sq-line: #e4e7eb;
+    --sq-line-strong: #cbd5e1;
 
-    --sq-ink: #052e24;
-    --sq-ink-2: #2f5d50;
-    /* Tertiary text. #5b8577 measured 3.93:1 on canvas, 4.15:1 on surface and
-       3.65:1 on the accent-soft fill — all below AA. #5F7169 measures 4.91 /
-       5.18 / 4.57, so captions and metadata are legible on every surface. */
-    --sq-ink-3: #5F7169;
+    --sq-ink: #0f172a;
+    --sq-ink-2: #334155;
+    --sq-ink-3: #5a6b7d;
 
     --sq-accent-soft: #d1fae5;
     --sq-ok: #047857;
@@ -52,37 +59,38 @@
     --sq-danger: #dc2626;
     --sq-danger-soft: #fee2e2;
 
-    --sq-shadow: 0 1px 2px rgba(6, 78, 59, 0.06), 0 8px 24px -12px rgba(6, 78, 59, 0.18);
-    --sq-shadow-lg: 0 2px 4px rgba(6, 78, 59, 0.05), 0 20px 48px -20px rgba(6, 78, 59, 0.28);
-    --sq-scrim: rgba(5, 46, 36, 0.5);
+    --sq-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+    --sq-shadow-lg: 0 2px 4px rgba(15, 23, 42, 0.05), 0 20px 48px -20px rgba(15, 23, 42, 0.28);
+    --sq-scrim: rgba(15, 23, 42, 0.55);
 
-    /* 16-24px radius scale per the Organic Biomorphic style */
-    --sq-radius: 20px;
-    --sq-radius-lg: 24px;
-    --sq-radius-sm: 12px;
+    /* Swiss: restrained radii. 20-24px read as friendly/consumer; a professional
+       instrument is squarer, and the flatter edges suit the grid layout. */
+    --sq-radius: 12px;
+    --sq-radius-lg: 16px;
+    --sq-radius-sm: 8px;
 
     color-scheme: light;
   }
 
   .dark {
-    --sq-primary: #041f19;
-    --sq-primary-fg: #ecfdf5;
+    --sq-primary: #0b1725;
+    --sq-primary-fg: #e2e8f0;
     --sq-accent: #34d399;
     --sq-accent-fg: #052e24;
     --sq-sun: #fbbf24;
 
-    --sq-canvas: #04120e;
-    --sq-surface: #0a1f19;
-    --sq-surface-2: #102c23;
-    --sq-surface-3: #163b2f;
-    --sq-line: #1c4638;
-    --sq-line-strong: #2a5c4a;
+    --sq-canvas: #0a0f1a;
+    --sq-surface: #111827;
+    --sq-surface-2: #1a2433;
+    --sq-surface-3: #243044;
+    --sq-line: #263449;
+    --sq-line-strong: #3a4a63;
 
-    --sq-ink: #e8f5ef;
-    --sq-ink-2: #a9cec0;
-    --sq-ink-3: #7ba697;
+    --sq-ink: #f1f5f9;
+    --sq-ink-2: #b6c4d4;
+    --sq-ink-3: #8494a8;
 
-    --sq-accent-soft: #0c3527;
+    --sq-accent-soft: #0c2f22;
     --sq-ok: #34d399;
     --sq-ok-soft: #0a2e22;
     --sq-warn: #fbbf24;
@@ -174,9 +182,31 @@
     outline-offset: 2px;
   }
   .sq-btn:disabled {
-    opacity: 0.45;
     cursor: not-allowed;
   }
+  /* A disabled control must stay legible. Dropping element opacity faded the
+     emerald fill to pale mint while the label stayed white, which measured
+     2.3:1 — a primary action you cannot read. Instead the fill desaturates to
+     a neutral surface and the label adopts a mid-grey that clears 4.5:1. */
+  .sq-btn-primary:disabled,
+  .sq-btn-ghost:disabled {
+    background-color: var(--sq-surface-2);
+    color: var(--sq-ink-3);
+    box-shadow: none;
+  }
+  .sq-btn-primary:disabled { border-color: var(--sq-line); }
+
+  /* Secondary text inside an active (filled) chip. Using opacity here whitened
+     the number against emerald and measured 3.5:1, below the 4.5:1 floor, so
+     the count gets a real colour that is legible on the active fill. */
+  .sq-count {
+    color: var(--sq-ink-2);
+    opacity: 1;
+  }
+  [data-active='true'] .sq-count {
+    color: color-mix(in srgb, var(--sq-accent-fg) 84%, transparent);
+  }
+  .sq-btn-primary:disabled { border-color: var(--sq-line); }
 
   .sq-btn-primary {
     background-color: var(--sq-accent);
@@ -229,8 +259,8 @@
     white-space: nowrap;
     flex-shrink: 0;
     /* These are the primary section filters, often tapped with a thumb in the
-       field. At 32px they sat well under the 44px WCAG 2.1 AA minimum. */
-    min-height: 44px;
+       field. At 32px they sat well under the 48dp Android minimum. */
+    min-height: 48px;
     font-size: 0.75rem;
     font-weight: 700;
     white-space: nowrap;

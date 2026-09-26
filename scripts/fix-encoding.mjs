@@ -135,7 +135,7 @@ const walk = (dir) => {
     const p = join(dir, name);
     if (statSync(p).isDirectory()) { walk(p); return; }
     if (!EXTS.has(extname(p))) return;
-    if (p.includes('noto-sans') || p.includes('brandLogos.generated')) return;
+    if (p.includes('noto-sans-subset') || p.includes('brandLogos.generated')) return;
     files.push(p);
   });
 };

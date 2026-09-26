@@ -128,10 +128,21 @@ PROFILE_PRESETS.forEach((p) => {
 });
 
 // D10: assets referenced by data must exist on disk.
+// The embedded PDF font is a subset (see scripts/subset_font.py), so assert the
+// real current filename rather than a hardcoded one that goes stale whenever
+// the subsetting layout changes.
 [
-  'public/brands', 'src/fonts/noto-sans.js', 'src/data/brandLogos.generated.js',
-  'src/data/presetAliases.js', 'src/utils/presets.js',
+  'public/brands',
+  'src/data/brandLogos.generated.js',
+  'src/data/presetAliases.js',
+  'src/utils/presets.js',
 ].forEach((p) => { if (!existsSync(p)) add('CRIT', 'assets', `missing required path: ${p}`); });
+
+// The PDF font module and its .ttf sidecar.
+const fontMod = existsSync('src/fonts/noto-sans-subset.js');
+if (!fontMod) add('CRIT', 'assets', 'missing PDF font module src/fonts/noto-sans-subset.js');
+[ 'src/fonts/noto-sans-subset.ttf', 'src/fonts/noto-sans-subset-bold.ttf' ]
+  .forEach((p) => { if (!existsSync(p)) add('CRIT', 'assets', `missing font sidecar ${p}`); });
 
 export default true;
 

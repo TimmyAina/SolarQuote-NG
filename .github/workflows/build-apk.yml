@@ -45,25 +45,88 @@ jobs:
         working-directory: android
         run: chmod +x gradlew
 
+      # A debug build applies Capacitor's applicationIdSuffix ".debug", so the
+      # app installs as com.solarquote.ng.debug and the artefact is literally
+      # named app-debug.apk - which is the "app-debug" name reported from the
+      # launcher. It is also unminified and unsigned, so it is both larger and
+      # slower than it needs to be. Ship a real release build instead.
+      - name: Generate Upload Keystore
+        env:
+          STORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # Fall back to a build-only password when the repository secrets are
+          # not set, so a fork or a fresh clone still produces a working APK
+          # rather than failing the whole release.
+          STORE_PASS="${STORE_PASS:-solarquote-build}"
+          KEY_PASS="${KEY_PASS:-$STORE_PASS}"
+          echo "::add-mask::$STORE_PASS"
+          echo "::add-mask::$KEY_PASS"
+          keytool -genkeypair -v \
+            -keystore android/app/solarquote-upload.jks \
+            -alias solarquote \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$STORE_PASS" \
+            -keypass "$KEY_PASS" \
+            -dname "CN=SolarQuote NG, OU=Engineering, O=SolarQuote NG, L=Lagos, C=NG"
+
+      - name: Write Signing Config
+        env:
+          STORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.KEY_PASSWORD }}
+        working-directory: android
+        run: |
+          STORE_PASS="${STORE_PASS:-solarquote-build}"
+          KEY_PASS="${KEY_PASS:-$STORE_PASS}"
+          cat >> app/build.gradle <<'EOF'
+
+          android {
+            signingConfigs {
+              release {
+                if (project.hasProperty('storeFile')) {
+                  storeFile file(project.property('storeFile'))
+                  storePassword project.property('storePassword')
+                  keyAlias project.property('keyAlias')
+                  keyPassword project.property('keyPassword')
+                }
+              }
+            }
+            buildTypes {
+              release {
+                signingConfig signingConfigs.release
+                minifyEnabled true
+                shrinkResources true
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+              }
+            }
+          }
+          EOF
+          {
+            echo "storeFile=solarquote-upload.jks"
+            echo "storePassword=$STORE_PASS"
+            echo "keyAlias=solarquote"
+            echo "keyPassword=$KEY_PASS"
+          } >> gradle.properties
+
       - name: Build Android Release APK
         working-directory: android
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: SolarQuote-NG-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 
       - name: Create GitHub Release (On Main Branch Push)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.2.0
-          name: SolarQuote NG Release v0.2.0
+          tag_name: v0.2.1
+          name: SolarQuote NG Release v0.2.1
           body: |
-            ## SolarQuote NG v0.2.0 — Wallet, catalog & currency fixes ⚡
+            ## SolarQuote NG v0.2.1 — Wallet, catalog & currency fixes ⚡
 
             ### Fixed
             - **Naira sign (₦) now renders** in the app and in every exported PDF.
@@ -93,6 +156,6 @@ jobs:
             - ~180 automated assertions across billing, catalog, sizing,
               persistence, PDF output and a full jsdom render of the app.
           files: |
-            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/release/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

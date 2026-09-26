@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Product Visual
  * ---------------------------------------------------------------------------
  * Renders a product image when one is bundled, and otherwise builds a tile from
@@ -6,14 +6,14 @@
  * brand's own colour with its name, plus a category glyph.
  *
  * Why not hotlink photos? Retailer/manufacturer URLs break, hotlink-block, and
- * fail offline â€” which on a tablet in the field means a catalogue full of broken
+ * fail offline — which on a tablet in the field means a catalogue full of broken
  * image boxes. A generated tile is always present, always on-brand, zero bytes
  * of network, and can be replaced with a real photo simply by setting `image`
  * on a catalog row.
  *
  * Why the brand registry? An earlier version hashed the brand NAME into an
  * arbitrary hue and painted a single letter, which meant every Deye product
- * looked identical and none of them matched the emerald design system â€” while
+ * looked identical and none of them matched the emerald design system — while
  * the manufacturer tabs right above showed the real logos. The tabs and the
  * cards now share one source of truth.
  */
@@ -92,13 +92,22 @@ export function ProductVisual({ product, size = 'md', className = '', showBrand 
     <div
       className={`relative w-full h-full flex items-center justify-center ${pad} ${className}`}
       style={{
-        background: `linear-gradient(135deg, ${tint}1F, ${tint}3D)`,
+        // A light wash of the brand colour. Deliberately a *surface*, not a
+        // foreground: the brand hue is painted at full opacity below so the
+        // initials stay legible. Previously the tile used the brand colour as the
+        // text colour at 80% opacity, which measured 3.73:1 on the dark theme —
+        // below the 4.5:1 floor for small text.
+        background: `linear-gradient(135deg, ${tint}26, ${tint}4D)`,
         color: tint,
       }}
     >
       <Icon className={iconSize} strokeWidth={1.75} aria-hidden="true" />
       {showBrand && (
-        <span className={`absolute bottom-2 right-2 font-extrabold leading-none opacity-80 ${dim}`} aria-hidden="true">
+        <span
+          className={`absolute bottom-2 right-2 font-extrabold leading-none ${dim}`}
+          style={{ color: tint, opacity: 1 }}
+          aria-hidden="true"
+        >
           {initialsFor(brandName)}
         </span>
       )}

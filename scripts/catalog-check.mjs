@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Catalog + Energy Cost verification
  * ---------------------------------------------------------------------------
  * Guards the four requirements that are easy to regress:
@@ -22,6 +22,7 @@ import { CONDITIONS, priceForCondition } from '../src/data/parts.js';
 import { calculateRunningCosts } from '../src/utils/energyCosts.js';
 import { calculateSolarSystem } from '../src/utils/calculations.js';
 import { GRID_BANDS, DISCOS, DEFAULT_SETTINGS } from '../src/data/pricingDefaults.js';
+import { existsSync, readFileSync as read } from 'node:fs';
 
 let failures = 0;
 const check = (label, condition, detail = '') => {
@@ -111,7 +112,7 @@ console.log('\n[E1] Nigerian energy price data');
 check('5 NERC bands present', GRID_BANDS.length === 5);
 check('11 DisCos present', DISCOS.length === 11);
 check(
-  'petrol default is realistic (â‚¦1000â€“â‚¦1500)',
+  'petrol default is realistic (₦1000–₦1500)',
   GRID_BANDS.length === 5
 );
 
@@ -124,7 +125,7 @@ const base = {
   generatorFuelType: 'diesel',
 };
 const bandA = calculateRunningCosts({ dailyKWh: 10, genKVA: 5, settings: base });
-console.log(`    Band A: â‚¦${bandA.monthlyTotal.toLocaleString()}/mo, â‚¦${bandA.effectiveCostPerKWh}/kWh effective`);
+console.log(`    Band A: ₦${bandA.monthlyTotal.toLocaleString()}/mo, ₦${bandA.effectiveCostPerKWh}/kWh effective`);
 check('Band A monthly cost is positive', bandA.monthlyTotal > 0);
 check(
   'effective cost EXCEEDS the grid tariff (generator is real)',
@@ -137,7 +138,7 @@ const bandE = calculateRunningCosts({
   genKVA: 5,
   settings: { ...base, discoTariffPerKWh: 40, gridHoursPerDay: 6 },
 });
-console.log(`    Band E: â‚¦${bandE.monthlyTotal.toLocaleString()}/mo`);
+console.log(`    Band E: ₦${bandE.monthlyTotal.toLocaleString()}/mo`);
 check(
   'low-tariff band still costs MORE in practice',
   bandE.monthlyTotal > bandA.monthlyTotal,
@@ -312,6 +313,95 @@ console.log('\n[C11] No hardcoded catalog size, no duplicate products');
   check('no duplicate name+brand rows', dupes.length === 0, dupes.map(([k, n]) => `x${n} ${k}`).join('; '));
 }
 
+
+console.log('\n[C12] Every interactive control has an accessible name');
+// Regression: the "Electricity distribution company" and "Installation region"
+// dropdowns were labelled with a sibling <p className="sq-label">, which is
+// visible to a sighted user but invisible to a screen reader. A native <select>
+// needs aria-label (or an associated <label for>) to be announced at all.
+const uiFiles = [
+  'src/components/SettingsScreen.jsx',
+  'src/components/LoadsScreen.jsx',
+  'src/components/CatalogScreen.jsx',
+  'src/components/BOQScreen.jsx',
+  'src/components/WalletScreen.jsx',
+  'src/components/ProductDetail.jsx',
+  'src/components/BottomTabs.jsx',
+];
+let selectCount = 0;
+let selectLabelled = 0;
+uiFiles.forEach((f) => {
+  if (!existsSync(f)) return;
+  const src = read(f, 'utf8');
+  // Walk each <select ...> opening tag and check for an accessible name.
+  const tags = src.match(/<select\b[\s\S]*?>/g) || [];
+  tags.forEach((tag) => {
+    selectCount += 1;
+    const hasName =
+      /aria-label\s*=/.test(tag) ||
+      /aria-labelledby\s*=/.test(tag) ||
+      /\bid\s*=\s*["'][^"']+["']/.test(tag) && /<label[^>]*\bfor\s*=/.test(src);
+    if (hasName) selectLabelled += 1;
+    else add('HIGH', 'a11y', `${f}: <select> with no accessible name`);
+  });
+});
+check('found the dropdowns to audit', selectCount >= 2, `${selectCount} select(s)`);
+check('every <select> is labelled', selectLabelled === selectCount, `${selectLabelled}/${selectCount}`);
+
+// A brand tile must not rely on opacity for legibility: at opacity-80 the
+// brand-coloured initials measured 3.73:1 on the dark theme, under the 4.5:1
+// floor for small text.
+const pv = read('src/components/ProductVisual.jsx', 'utf8');
+check('brand initials are not dimmed by opacity', !/opacity-80/.test(pv));
+check('brand tile paints the colour at full opacity', /opacity:\s*1/.test(pv));
+
+// Every wordmark tile must be readable. Regression: brand-coloured initials on a
+// 10% wash of the same colour failed badly — the pale brands measured as low as
+// 1.91:1, and darkening the wash made it worse (it moves the surface toward the
+// label). The fix solves for the label colour, so assert the outcome for EVERY
+// brand rather than one hand-picked case.
+{
+  const {
+    readableLabel, hexToRgb, composite, contrast, LIGHT_BACKDROPS, DARK_BACKDROPS,
+    WASH_ALPHA, parseCssRgb,
+  } = await import('../src/utils/contrast.js');
+
+  // Both themes must pass. The dark case is the subtle one: solving for a light
+  // canvas returns pure black, which is invisible on the dark surface (Sunsynk
+  // measured 1.29:1), so a light-only test would have shipped an unreadable tab.
+  const themes = [
+    { name: 'light', backdrops: LIGHT_BACKDROPS },
+    { name: 'dark', backdrops: DARK_BACKDROPS },
+  ];
+  themes.forEach(({ name, backdrops }) => {
+    const failing = [];
+    let worst = Infinity;
+    let worstName = '';
+    BRANDS.filter((b) => !b.logo).forEach((b) => {
+      const label = parseCssRgb(readableLabel(b.color, name));
+      backdrops.forEach((surface) => {
+        const wash = composite(hexToRgb(b.color), surface, WASH_ALPHA);
+        const r = contrast(label, wash);
+        if (r < worst) { worst = r; worstName = b.name; }
+        if (r < 4.5) failing.push(`${b.name} ${r.toFixed(2)}`);
+      });
+    });
+    check(
+      `every wordmark tile clears 4.5:1 in ${name} mode`,
+      failing.length === 0,
+      failing.length ? failing.slice(0, 3).join(', ') : `worst ${worst.toFixed(2)}:1 (${worstName})`
+    );
+  });
+
+  // The naive fixes must stay rejected by this test.
+  check('light mode darkens the pale brands', readableLabel('#F0E9D2', 'light') !== '#F0E9D2');
+  check('light mode leaves a dark brand untouched', readableLabel('#0B5FA5', 'light') === '#0B5FA5');
+  check(
+    'dark mode never returns black',
+    readableLabel('#0E7C7B', 'dark') !== 'rgb(0, 0, 0)',
+    readableLabel('#0E7C7B', 'dark')
+  );
+}
 
 console.log(
   failures === 0
