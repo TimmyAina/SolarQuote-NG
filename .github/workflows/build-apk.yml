@@ -1,4 +1,4 @@
-name: Build & Release SolarQuote NG Android APK
+﻿name: Build & Release SolarQuote NG Android APK
 
 on:
   push:
@@ -126,35 +126,49 @@ jobs:
           tag_name: v0.2.1
           name: SolarQuote NG Release v0.2.1
           body: |
-            ## SolarQuote NG v0.2.1 — Wallet, catalog & currency fixes ⚡
+            ## SolarQuote NG v0.2.1 - sizing accuracy, catalog and UI fixes
 
             ### Fixed
-            - **Naira sign (₦) now renders** in the app and in every exported PDF.
-              jsPDF's built-in fonts are WinAnsi-only and had no U+20A6 glyph, so
-              every currency figure silently lost its symbol. Noto Sans is now
-              embedded in the PDF and added to the app font stack.
+            - **Facility presets sized the system to zero.** The four built-in
+              templates referenced appliance keys that matched no catalog entry
+              and carried no wattage, so the sizing engine saw an empty site. The
+              app opened recommending the 1.5 kVA minimum for a school with 30
+              fans and 40 lights. Presets now resolve to real products: a school
+              template correctly yields 85 kWh/day and a 15 kVA array.
+            - **Manufacturer tabs were empty for Appliances.** All 118 appliances
+              are unbranded, so grouping by maker produced no tabs at all for the
+              largest section in the catalog. Unbranded and single-maker sections
+              now group by category, and tab counts still sum to the section size.
+            - **Corrupted characters in the app and PDF.** Several source files
+              had been re-encoded as CP1252, which mangled the Naira sign in
+              user-facing text. Repaired and verified by codepoint.
+            - **A corrupt saved-settings payload could white-screen the app.** A
+              nested settings object is now only ever replaced by another object.
+            - **Product cards were unreadable in places.** A redundant 8px brand
+              badge at 3.27:1 contrast was removed, and the bottom navigation bar
+              is now opaque so card gradients no longer bleed through the labels.
 
             ### New
-            - **Wallet & plans** — Pay-As-You-Go at ₦500 per generated quotation,
-              Limited ₦10,000/month and Unlimited ₦25,000/month. Wallet top-ups,
-              transaction history, plan expiry countdown and cancellation.
-            - **Your own products** — add your own inverters, batteries, panels,
-              laptops, desktops and appliances. They appear in the catalog,
-              search and can be quoted like any built-in product.
-            - **Per-product price overrides** — change the price of any catalog
-              product to your own supplier price. Overrides never mutate the
-              shipped dataset and apply to every quote.
-            - **Onboarding** now asks for detail level (Simple / Professional)
-              *and* a plan, in a three-step first-run flow.
-            - Light / dark / system themes, plus Simple and Professional detail
-              levels, are selectable in Settings.
+            - **Parts and spares catalog** - 43 electrical parts (cable, MC4
+              connectors, breakers, isolators, surge protection, racking, earth
+              pits) in their own section, with New / Refurbished / Used grading.
+              Parts are deliberately excluded from the load list, since a part has
+              no wattage and would distort the sizing engine.
+            - **Manufacturer grouping** - a tab bar per section so an installer
+              browses Deye against Sunsynk rather than one long list, with real
+              manufacturer artwork where it is available under a reusable licence.
+            - **Visual audit harness** - drives the built app in a real browser
+              and reports overflow, undersized touch targets, unlabeled controls,
+              low-contrast text and missing alt text, per screen, in both themes
+              and at 320px and 390px.
 
             ### Engineering
-            - Quote counter starts at **#0** and never uses a default offset.
-            - Feature gates by plan rank, so higher tiers inherit lower ones.
-            - Paystack-ready payment seam (wallet is live; gateway is config).
-            - ~180 automated assertions across billing, catalog, sizing,
-              persistence, PDF output and a full jsdom render of the app.
+            - Embedded PDF font subset to only the glyphs used: 760 KB to 34 KB,
+              shrinking the APK bundle materially.
+            - Hardcoded product counts removed; the catalog total is now derived,
+              with a test that fails if a stale number reappears.
+            - ~330 automated assertions across billing, catalog, sizing,
+              persistence, encoding, PDF output and a full jsdom render.
           files: |
             android/app/build/outputs/apk/release/app-release.apk
         env:
